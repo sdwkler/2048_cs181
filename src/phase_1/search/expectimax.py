@@ -26,15 +26,22 @@ class ExpectimaxAgent:
                 if val > best_val:
                     best_val, best_action = val, action
 
+        # === 修复点 1：异常退出时补齐 3 个返回值 ===
         if best_action == -1:
             for action in range(4):
                 next_b = env_module.board(b.raw)
-                if next_b.move(action) != -1: return action
-            return 0 
+                if next_b.move(action) != -1: 
+                    return action, 0.0, 0.0
+            return 0, 0.0, 0.0 
             
         # 返回动作以及本步的压缩率 (哈希表唯一节点数 / 总展开节点数)
         compression_ratio = len(self.transposition_table) / max(1, self.total_nodes_expanded)
-        return best_action, compression_ratio
+        
+        # === 修复点 2：新增计算有效分支因子 b_eff ===
+        b_eff = self.total_nodes_expanded ** (1.0 / max_depth) if self.total_nodes_expanded > 0 else 0.0
+        
+        # === 修复点 3：正常退出时返回 3 个值 ===
+        return best_action, compression_ratio, b_eff
 
     def _chance_node(self, afterstate: env_module.board, depth, current_prob):
         self.total_nodes_expanded += 1

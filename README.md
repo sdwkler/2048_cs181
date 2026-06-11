@@ -36,3 +36,12 @@ digital_defence_2048/
         └── planning/           # 2. 在线规划范式（研究采样方差与算力等价性）
             ├── mcts.py         # 纯净的 MCTS 算法核心，搭载根节点动作估值方差与策略信息熵探针
             └── run_planning.py # 启动器：执行 MCTS 算力缩放（Rollouts）博弈实验并输出分析面板
+```
+
+```text
+conda create -n pypy_env pypy -c conda-forge -y
+conda activate pypy_env
+pip install tqdm numpy
+set PYTHONUTF8=1
+chcp 65001
+set PYTHONIOENCODING=utf-8
