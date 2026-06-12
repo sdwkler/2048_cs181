@@ -6,6 +6,10 @@ import random
 from src.environments.base_env import board, info, error, debug
 
 class feature(abc.ABC):
+    # 【核心修复】：将内存统计提升为类级别的静态属性，确保多进程安全初始化
+    total = 0
+    limit = (2 << 30) // 4 
+
     def __init__(self, length : int):
         self.weight = feature.alloc(length)
 
@@ -59,14 +63,12 @@ class feature(abc.ABC):
             error('unexpected end of binary')
             exit(1)
 
-    @staticmethod
-    def alloc(num : int) -> list[float]:
-        if not hasattr(feature.alloc, "total"):
-            feature.alloc.total = 0
-            feature.alloc.limit = (2 << 30) // 4 
+    # 【核心修复】：改为 @classmethod，直接操作 cls.total 和 cls.limit
+    @classmethod
+    def alloc(cls, num : int) -> list[float]:
         try:
-            feature.alloc.total += num
-            if feature.alloc.total > feature.alloc.limit:
+            cls.total += num
+            if cls.total > cls.limit:
                 raise MemoryError("memory limit exceeded")
             return [float(0)] * num
         except MemoryError as e:
@@ -256,7 +258,7 @@ class learning:
             avg_score = sum(self.scores) / len(self.scores)
             info(f"{n}\tavg = {avg_score}\tmax = {max(self.scores)}")
             stat = [ self.maxtile.count(i) for i in range(16) ]
-            t, c, coef = 1, 0, 100 / unit
+            t, c, coef = 100 / unit
             while c < unit:
                 if stat[t] != 0:
                     accu = sum(stat[t:])

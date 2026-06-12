@@ -56,5 +56,5 @@ def train_network(target_type="afterstate", total_episodes=100000, alpha=0.1, se
     info(f">>> ✅ {target_type.upper()} 模型已保存至 {save_path}")
 
 if __name__ == "__main__":
-    train_network(target_type="afterstate", total_episodes=10000)
-    train_network(target_type="state", total_episodes=10000)
+    train_network(target_type="afterstate", total_episodes=50000)
+    train_network(target_type="state", total_episodes=50000)

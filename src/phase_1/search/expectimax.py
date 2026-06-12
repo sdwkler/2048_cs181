@@ -65,12 +65,14 @@ class ExpectimaxAgent:
         for pos in empties:
             afterstate.set(pos, 1) # 模拟 2
             if not self.use_afterstate and depth == 1:
+                self.total_nodes_expanded += 1   # <--- 【补上探针】
                 expected_value += weight * 0.9 * self.value_func(afterstate)
             else:
                 expected_value += weight * 0.9 * self._max_node(afterstate, depth - 1, current_prob * weight * 0.9)
             
             afterstate.set(pos, 2) # 模拟 4
             if not self.use_afterstate and depth == 1:
+                self.total_nodes_expanded += 1   # <--- 【补上探针】
                 expected_value += weight * 0.1 * self.value_func(afterstate)
             else:
                 expected_value += weight * 0.1 * self._max_node(afterstate, depth - 1, current_prob * weight * 0.1)
