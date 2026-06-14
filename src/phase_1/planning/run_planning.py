@@ -36,6 +36,14 @@ def run_single_board(args):
     return {
         "action": action,
         "root_action_value_variance": root_variance,
+        "root_action_values": {
+            ACTION_NAMES[action]: value
+            for action, value in agent.last_root_action_values.items()
+        },
+        "root_action_visits": {
+            ACTION_NAMES[action]: visits
+            for action, visits in agent.last_root_action_visits.items()
+        },
         "visit_policy_entropy": visit_entropy,
         "time_per_decision_ms": elapsed_ms,
     }

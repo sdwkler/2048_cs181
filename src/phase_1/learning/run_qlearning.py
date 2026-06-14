@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import math
 import os
@@ -22,6 +24,7 @@ from src.phase_1.common import (
     progress,
     safe_mean,
     summarize_games,
+    timestamp,
     write_result_bundle,
 )
 
@@ -233,6 +236,24 @@ def random_decision_board(seed: int, max_steps: int = 200) -> board:
     return b
 
 
+def policy_decision_board(agent: QLearningAgent, seed: int, max_warmup_steps: int = 200) -> board:
+    rng = random.Random(seed)
+    b = board()
+    popup_with_rng(b, rng)
+    popup_with_rng(b, rng)
+    warmup_steps = rng.randint(0, max_warmup_steps)
+    for _ in range(warmup_steps):
+        actions = legal_actions(b)
+        if not actions:
+            break
+        action = agent.best_action(b)
+        reward = b.move(action)
+        if reward == -1:
+            break
+        popup_with_rng(b, rng)
+    return b
+
+
 def rollout_return(agent: QLearningAgent, start_raw: int, seed: int, gamma: float = 1.0) -> float:
     rng = random.Random(seed)
     b = board(start_raw)
@@ -253,7 +274,9 @@ def rollout_return(agent: QLearningAgent, start_raw: int, seed: int, gamma: floa
 def collect_bias(agent: QLearningAgent, count: int, seed: int) -> dict:
     biases = []
     for i in range(count):
-        b = random_decision_board(seed + i)
+        b = policy_decision_board(agent, seed + i)
+        if not legal_actions(b):
+            b = random_decision_board(seed + 100_000 + i)
         predicted = agent.best_action_value(b.raw)
         realized = rollout_return(agent, b.raw, seed + 10_000 + i, gamma=agent.gamma)
         biases.append(predicted - realized)
@@ -265,12 +288,13 @@ def collect_bias(agent: QLearningAgent, count: int, seed: int) -> dict:
     }
 
 
-def train_one(config, exp_id: str, variant: str, target_mode: str, feature_mode: str):
+def train_one(config, exp_id: str, variant: str, target_mode: str, feature_mode: str, model_dir: str):
     board.lookup.init()
     rng = random.Random(config.seed + int(exp_id[-1], 36) * 1000)
     agent = QLearningAgent(target_mode=target_mode, feature_mode=feature_mode)
     td_errors, td_windows = [], []
     bias = None
+    bias_episode = None
     start_time = time.perf_counter()
 
     for episode in progress(range(1, config.q_episodes + 1), desc=variant[:24], leave=False):
@@ -297,14 +321,16 @@ def train_one(config, exp_id: str, variant: str, target_mode: str, feature_mode:
 
         if bias is None and episode >= config.q_bias_episode:
             bias = collect_bias(agent, config.q_bias_samples, config.seed + 40_000 + episode)
+            bias_episode = episode
 
     if td_errors:
         rms = math.sqrt(safe_mean(err * err for err in td_errors))
         td_windows.append({"episode": config.q_episodes, "td_error_rms": rms})
     if bias is None:
         bias = collect_bias(agent, config.q_bias_samples, config.seed + 40_000 + config.q_episodes)
+        bias_episode = config.q_episodes
 
-    model_path = os.path.join("models", f"qlearning_{exp_id.lower().replace('-', '')}_{target_mode}_{feature_mode}.pkl")
+    model_path = os.path.join(model_dir, f"qlearning_{exp_id.lower().replace('-', '')}_{target_mode}_{feature_mode}.pkl")
     agent.save(model_path)
 
     def choose_action(b: board) -> int:
@@ -316,30 +342,38 @@ def train_one(config, exp_id: str, variant: str, target_mode: str, feature_mode:
     ]
     game_summary = summarize_games(game_records)
     elapsed = time.perf_counter() - start_time
+    td_rms_values = [w["td_error_rms"] for w in td_windows]
     row = {
         "experiment": exp_id,
         "variant": variant,
         "target_mode": target_mode,
         "feature_mode": feature_mode,
         **game_summary,
-        "td_error_rms": td_windows[-1]["td_error_rms"] if td_windows else 0.0,
+        "td_error_rms_final": td_windows[-1]["td_error_rms"] if td_windows else 0.0,
+        "td_error_rms_mean": safe_mean(td_rms_values),
+        "td_error_rms_min": min(td_rms_values) if td_rms_values else 0.0,
+        "td_error_rms_max": max(td_rms_values) if td_rms_values else 0.0,
+        "bias_episode": bias_episode,
         "average_bias": bias["average_bias"],
+        "max_bias": bias["max_bias"],
+        "min_bias": bias["min_bias"],
         "model_path": model_path,
         "train_seconds": elapsed,
     }
-    detail = {"td_windows": td_windows, "bias": bias, "games": game_records}
+    detail = {"td_windows": td_windows, "bias": {**bias, "episode": bias_episode}, "games": game_records}
     return row, detail
 
 
 def run_experiment(config):
     rows, details = [], {}
+    model_dir = os.path.join("models", "qlearning_runs", timestamp())
     for exp_id, variant, target_mode, feature_mode in EXPERIMENTS:
-        row, detail = train_one(config, exp_id, variant, target_mode, feature_mode)
+        row, detail = train_one(config, exp_id, variant, target_mode, feature_mode, model_dir)
         rows.append(row)
         details[exp_id] = detail
         print(
             f"{exp_id} {variant}: score={row['average_score']:.1f}, "
-            f"td_rms={row['td_error_rms']:.2f}, bias={row['average_bias']:.2f}"
+            f"td_rms={row['td_error_rms_final']:.2f}, bias={row['average_bias']:.2f}"
         )
     paths = write_result_bundle(config.output_dir, "qlearning", config, rows, details)
     print(f"Q-learning results saved: {paths['md']}")

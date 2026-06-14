@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 import random
 
@@ -22,12 +24,16 @@ class MCTSAgent:
         self.N: dict[tuple[int, int] | int, int] = {}
         self.N_s: dict[int, int] = {}
         self.visited: set[tuple[int, int] | int] = set()
+        self.last_root_action_values: dict[int, float] = {}
+        self.last_root_action_visits: dict[int, int] = {}
 
     def get_best_action(self, b: board, num_simulations: int = 100) -> tuple[int, float, float]:
         self.Q.clear()
         self.N.clear()
         self.N_s.clear()
         self.visited.clear()
+        self.last_root_action_values.clear()
+        self.last_root_action_visits.clear()
 
         for _ in range(num_simulations):
             self._simulate_state(b.raw)
@@ -37,7 +43,7 @@ class MCTSAgent:
             return 0, 0.0, 0.0
 
         action_scores, action_visits = [], []
-        best_action, best_score = legal_actions[0], -math.inf
+        best_action, best_visits, best_score = legal_actions[0], -1, -math.inf
         for action in legal_actions:
             after_raw, reward = self._apply_action(b.raw, action)
             if self.use_afterstate:
@@ -49,10 +55,12 @@ class MCTSAgent:
                 score = self.Q.get(key, 0.0) / max(1, self.N.get(key, 0))
 
             visits = self.N.get(key, 0)
+            self.last_root_action_values[action] = score
+            self.last_root_action_visits[action] = visits
             action_scores.append(score)
             action_visits.append(visits)
-            if score > best_score:
-                best_score, best_action = score, action
+            if visits > best_visits or (visits == best_visits and score > best_score):
+                best_visits, best_score, best_action = visits, score, action
 
         return best_action, self._std(action_scores), self._entropy(action_visits, len(legal_actions))
 
