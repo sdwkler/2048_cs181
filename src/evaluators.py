@@ -175,5 +175,5 @@ class NTupleEvaluator:
     def __init__(self, tdl_model):
         self.tdl = tdl_model
         
-    def evaluate(self, b: board) -> float:
+    def evaluate(self, b: board, is_afterstate: bool = False) -> float:
         return self.tdl.estimate(b)

@@ -23,18 +23,18 @@ from src.phase_1.search.expectimax import ExpectimaxAgent
 _PROCESS_MODEL_CACHE = {}
 
 MIDDLE_CONFIGS = [
-    ("M1-State-Heur", "State + Heuristic", False, "heuristic", "state", 3),
-    ("M2-After-Heur", "Afterstate + Heuristic", True, "heuristic", "afterstate", 3),
+    ("M1-State-Heur", "State + Heuristic", False, "heuristic", "state", 2),
+    ("M2-After-Heur", "Afterstate + Heuristic", True, "heuristic", "afterstate", 2),
 
-    ("M3-State-NT", "State + StateNTuple", False, "ntuple_state", "state", 3),
-    ("M4-State-ANT", "State + AfterstateNTuple", False, "ntuple_afterstate", "state", 3),
-    ("M5-After-NT", "Afterstate + StateNTuple", True, "ntuple_state", "afterstate", 3),
-    ("M6-After-ANT", "Afterstate + AfterstateNTuple", True, "ntuple_afterstate", "afterstate", 3)
+    ("M3-State-NT", "State + StateNTuple", False, "ntuple_state", "state", 2),
+    ("M4-State-ANT", "State + AfterstateNTuple", False, "ntuple_afterstate", "state", 2),
+    ("M5-After-NT", "Afterstate + StateNTuple", True, "ntuple_state", "afterstate", 2),
+    ("M6-After-ANT", "Afterstate + AfterstateNTuple", True, "ntuple_afterstate", "afterstate", 2)
 ]
 
-# 环境漂移梯度：10% 到 80%
-DRIFT_PROBS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
-GAMES_PER_ENV = 50
+# 环境漂移梯度：10% 到 90%
+DRIFT_PROBS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+GAMES_PER_ENV = 10
 
 def build_ntuple(eval_type: str) -> learning:
     original_alloc = feature.alloc
@@ -87,7 +87,7 @@ def search_game_worker(args):
     step_times, compressions = [], []
     while True:
         start = time.perf_counter()
-        action, comp_ratio, _ = agent.get_best_action(b, max_depth=search_depth)
+        action, comp_ratio, _, _ = agent.get_best_action(b, max_depth=search_depth)
         step_times.append(time.perf_counter() - start)
         compressions.append(comp_ratio)
 
@@ -115,8 +115,8 @@ def compute_regret_drift(p4_prob: float, num_boards: int, seed: int, workers: in
     disagreements, regrets = 0, []
     for raw in boards:
         b = board(raw)
-        action_s, _, _ = agent_state.get_best_action(b, max_depth=3)
-        action_a, _, _ = agent_after.get_best_action(b, max_depth=3)
+        action_s, _, _, _ = agent_state.get_best_action(b, max_depth=3)
+        action_a, _, _, _ = agent_after.get_best_action(b, max_depth=3)
         if action_s != action_a:
             disagreements += 1
             regrets.append(1.0)
@@ -283,7 +283,7 @@ def run_experiment(config):
     paths = write_result_bundle(config.output_dir, "expectimax_drift", config, rows, {})
     
     # 调用绘图逻辑
-    picture_dir = os.path.join("models", "phase2", "picture")
+    picture_dir = os.path.join("models", "phase2", "picture","search_drift")
     print(f"\n🎨 Generating Academic Plots in {picture_dir} ...")
     generate_plots(rows, picture_dir)
     
@@ -299,7 +299,6 @@ if __name__ == "__main__":
     
     # 【强制隔离输出目录】
     config = config.__class__(
-        **{**config.__dict__, "output_dir": os.path.join("models", "phase2", "results")}
+        **{**config.__dict__, "output_dir": os.path.join("models", "phase2", "results","expectimax_drift")}
     )
-    
     run_experiment(config)

@@ -19,7 +19,7 @@ from src.common import (
     summarize_games,
     write_result_bundle,
 )
-from src.phase_1.planning.mcts import MCTSAgent
+from src.phase_1.planning.Used.mcts import MCTSAgent
 
 
 def planning_experiment_id(use_afterstate: bool, rollout_index: int) -> str:

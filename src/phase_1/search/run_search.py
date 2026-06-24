@@ -37,17 +37,17 @@ SEARCH_CONFIGS = [
     ("1-A", "Greedy Baseline", "greedy", False, "heuristic", "afterstate", 1, False),
     
     # 2-3. 人工启发式对照组
-    ("1-B", "Standard+Heuristic", "expectimax", False, "heuristic", "state", 3, False),
-    ("1-C", "Afterstate+Heuristic", "expectimax", True, "heuristic", "afterstate", 3, False),
+    ("1-B", "Standard+Heuristic", "expectimax", False, "heuristic", "state", 2, False),
+    ("1-C", "Afterstate+Heuristic", "expectimax", True, "heuristic", "afterstate", 2, False),
     
     # 4-7. 核心 2x2 交叉消融验证组 (极其纯净的控制变量法)
-    ("1-D", "Standard+StateNTuple", "expectimax", False, "ntuple_state", "state", 3, False),
-    ("1-E", "Standard+AfterstateNTuple", "expectimax", False, "ntuple_afterstate", "state", 3, False),
-    ("1-F", "Afterstate+StateNTuple", "expectimax", True, "ntuple_state", "afterstate", 3, False),
-    ("1-G", "Afterstate+AfterstateNTuple", "expectimax", True, "ntuple_afterstate", "afterstate", 3, False),
+    ("1-D", "Standard+StateNTuple", "expectimax", False, "ntuple_state", "state", 2, False),
+    ("1-E", "Standard+AfterstateNTuple", "expectimax", False, "ntuple_afterstate", "state", 2, False),
+    ("1-F", "Afterstate+StateNTuple", "expectimax", True, "ntuple_state", "afterstate", 2, False),
+    ("1-G", "Afterstate+AfterstateNTuple", "expectimax", True, "ntuple_afterstate", "afterstate", 2, False),
     
     # 8. 终极拓展组：结合 Afterstate 的特有能力引入前向剪枝！
-    ("1-H", "AfterstateNTuple+Pruning", "expectimax", True, "ntuple_afterstate", "afterstate", 3, True),
+    ("1-H", "AfterstateNTuple+Pruning", "expectimax", True, "ntuple_afterstate", "afterstate", 2, True),
 ]
 
 
@@ -110,13 +110,14 @@ def search_game_worker(args):
     popup_with_rng(b, rng, p4=p4_prob)
 
     score, steps = 0, 0
-    step_times, compressions, b_effs = [], [], []
+    step_times, compressions, b_effs, node_counts = [], [], [], []
     while max_game_steps is None or steps < max_game_steps:
         start = time.perf_counter()
-        action, comp_ratio, b_eff = agent.get_best_action(b, max_depth=search_depth)
+        action, comp_ratio, b_eff, node = agent.get_best_action(b, max_depth=search_depth)
         step_times.append(time.perf_counter() - start)
         compressions.append(comp_ratio)
         b_effs.append(b_eff)
+        node_counts.append(node)
 
         next_b = board(b.raw)
         reward = next_b.move(action)
@@ -134,6 +135,7 @@ def search_game_worker(args):
         "time_per_step_ms": 1000.0 * safe_mean(step_times),
         "compression_ratio": safe_mean(compressions),
         "b_eff": safe_mean(b_effs),
+        "node_count": safe_mean(node_counts),
     }
 
 
@@ -162,6 +164,7 @@ def evaluate_config(config, exp_id, name, algorithm, use_afterstate, eval_type, 
             "use_pruning": use_pruning,
             "b_eff": safe_mean(r["b_eff"] for r in records),
             "compression_ratio": safe_mean(r["compression_ratio"] for r in records),
+            "node_count": safe_mean(r["node_count"] for r in records),
         }
     )
     return summary, records
