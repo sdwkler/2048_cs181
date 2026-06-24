@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.
 from src.environments.base_env import board
 from src.ntuple.feature_base import diff_pattern, feature, learning, pattern
 from src.ntuple.loader import fast_mmap_load
-from src.phase_1.common import (
+from src.common import (
     ACTION_NAMES,
     add_common_args,
     apply_action,
@@ -23,21 +23,31 @@ from src.phase_1.common import (
     summarize_games,
     write_result_bundle,
 )
-from src.phase_1.evaluators import HeuristicEvaluator, NTupleEvaluator
+from src.evaluators import HeuristicEvaluator, NTupleEvaluator
 from src.phase_1.search.expectimax import ExpectimaxAgent, GreedyAgent
-
 
 _PROCESS_MODEL_CACHE = {}
 
-
+# =======================================================================
+# 【极其严谨的 8 组终极消融实验矩阵】
+# 参数含义: (exp_id, name, algorithm, use_afterstate(拓扑), eval_type, leaf_mode(公式), depth, use_pruning(剪枝))
+# =======================================================================
 SEARCH_CONFIGS = [
-    ("1-A", "Greedy Baseline", "greedy", False, "heuristic", "afterstate", 1),
-    ("1-B", "Standard+Heuristic", "expectimax", False, "heuristic", "state", 3),
-    ("1-C", "Afterstate+Heuristic", "expectimax", True, "heuristic", "afterstate", 3),
-    ("1-D", "Standard+StateNTuple", "expectimax", False, "ntuple_state", "state", 3),
-    ("1-E", "Standard+AfterstateNTuple", "expectimax", False, "ntuple_afterstate", "afterstate", 3),
-    ("1-F", "Afterstate+StateNTuple", "expectimax", True, "ntuple_state", "state", 3),
-    ("1-G", "Afterstate+AfterstateNTuple", "expectimax", True, "ntuple_afterstate", "afterstate", 3),
+    # 1. 基础对照组
+    ("1-A", "Greedy Baseline", "greedy", False, "heuristic", "afterstate", 1, False),
+    
+    # 2-3. 人工启发式对照组
+    ("1-B", "Standard+Heuristic", "expectimax", False, "heuristic", "state", 3, False),
+    ("1-C", "Afterstate+Heuristic", "expectimax", True, "heuristic", "afterstate", 3, False),
+    
+    # 4-7. 核心 2x2 交叉消融验证组 (极其纯净的控制变量法)
+    ("1-D", "Standard+StateNTuple", "expectimax", False, "ntuple_state", "state", 3, False),
+    ("1-E", "Standard+AfterstateNTuple", "expectimax", False, "ntuple_afterstate", "state", 3, False),
+    ("1-F", "Afterstate+StateNTuple", "expectimax", True, "ntuple_state", "afterstate", 3, False),
+    ("1-G", "Afterstate+AfterstateNTuple", "expectimax", True, "ntuple_afterstate", "afterstate", 3, False),
+    
+    # 8. 终极拓展组：结合 Afterstate 的特有能力引入前向剪枝！
+    ("1-H", "AfterstateNTuple+Pruning", "expectimax", True, "ntuple_afterstate", "afterstate", 3, True),
 ]
 
 
@@ -74,23 +84,30 @@ def get_value_func(eval_type: str):
     return NTupleEvaluator(_PROCESS_MODEL_CACHE[eval_type]).evaluate
 
 
-def build_search_agent(algorithm: str, use_afterstate: bool, eval_type: str, leaf_mode: str):
+def build_search_agent(algorithm: str, use_afterstate: bool, eval_type: str, leaf_mode: str, use_pruning: bool, p4_prob: float):
     value_func = get_value_func(eval_type)
     if algorithm == "greedy":
         return GreedyAgent(value_func=value_func)
-    return ExpectimaxAgent(use_afterstate=use_afterstate, value_func=value_func, leaf_mode=leaf_mode)
+    return ExpectimaxAgent(
+        use_afterstate=use_afterstate, 
+        value_func=value_func, 
+        leaf_mode=leaf_mode,
+        use_pruning=use_pruning,
+        prune_top_k=2,
+        p4_prob=p4_prob
+    )
 
 
 def search_game_worker(args):
-    game_seed, algorithm, use_afterstate, eval_type, leaf_mode, search_depth, max_game_steps = args
+    game_seed, algorithm, use_afterstate, eval_type, leaf_mode, search_depth, max_game_steps, use_pruning, p4_prob = args
     board.lookup.init()
     rng = random.Random(game_seed)
     random.seed(game_seed)
-    agent = build_search_agent(algorithm, use_afterstate, eval_type, leaf_mode)
+    agent = build_search_agent(algorithm, use_afterstate, eval_type, leaf_mode, use_pruning, p4_prob)
 
     b = board()
-    popup_with_rng(b, rng)
-    popup_with_rng(b, rng)
+    popup_with_rng(b, rng, p4=p4_prob)
+    popup_with_rng(b, rng, p4=p4_prob)
 
     score, steps = 0, 0
     step_times, compressions, b_effs = [], [], []
@@ -107,7 +124,7 @@ def search_game_worker(args):
             break
         score += reward
         steps += 1
-        popup_with_rng(next_b, rng)
+        popup_with_rng(next_b, rng, p4=p4_prob)
         b = next_b
 
     return {
@@ -120,10 +137,11 @@ def search_game_worker(args):
     }
 
 
-def evaluate_config(config, exp_id, name, algorithm, use_afterstate, eval_type, leaf_mode, depth):
+def evaluate_config(config, exp_id, name, algorithm, use_afterstate, eval_type, leaf_mode, depth, use_pruning):
+    p4_prob = getattr(config, 'p4_prob', 0.1) 
     seeds = [config.seed + i for i in range(config.search_games)]
     args_list = [
-        (seed, algorithm, use_afterstate, eval_type, leaf_mode, depth, config.max_game_steps)
+        (seed, algorithm, use_afterstate, eval_type, leaf_mode, depth, config.max_game_steps, use_pruning, p4_prob)
         for seed in seeds
     ]
     records = []
@@ -140,6 +158,8 @@ def evaluate_config(config, exp_id, name, algorithm, use_afterstate, eval_type, 
             "algorithm": algorithm,
             "depth": depth,
             "leaf_mode": leaf_mode,
+            "use_afterstate": use_afterstate,
+            "use_pruning": use_pruning,
             "b_eff": safe_mean(r["b_eff"] for r in records),
             "compression_ratio": safe_mean(r["compression_ratio"] for r in records),
         }
@@ -147,87 +167,19 @@ def evaluate_config(config, exp_id, name, algorithm, use_afterstate, eval_type, 
     return summary, records
 
 
-def best_action_for_raw(raw: int, use_afterstate: bool, eval_type: str, leaf_mode: str, depth: int) -> int:
-    value_func = get_value_func(eval_type)
-    agent = ExpectimaxAgent(use_afterstate=use_afterstate, value_func=value_func, leaf_mode=leaf_mode)
-    action, _, _ = agent.get_best_action(board(raw), max_depth=depth)
-    return action
-
-
-def decoupled_action_value(raw: int, action: int, value_func) -> float:
-    after_raw, reward = apply_action(raw, action)
-    if reward == -1:
-        return -float("inf")
-    return reward + value_func(board(after_raw))
-
-
-def compute_regret(config) -> dict:
-    board.lookup.init()
-    pressure_boards = generate_pressure_boards(config.regret_boards, config.seed + 10_000)
-    decoupled_value = get_value_func("ntuple_afterstate")
-    regrets, disagreements = [], 0
-
-    for raw in progress(pressure_boards, desc="Action regret", leave=False):
-        standard_action = best_action_for_raw(raw, False, "ntuple_state", "state", config.search_depth)
-        decoupled_action = best_action_for_raw(raw, True, "ntuple_afterstate", "afterstate", config.search_depth)
-        if standard_action != decoupled_action:
-            disagreements += 1
-            regrets.append(
-                decoupled_action_value(raw, decoupled_action, decoupled_value)
-                - decoupled_action_value(raw, standard_action, decoupled_value)
-            )
-
-    return {
-        "boards": len(pressure_boards),
-        "disagreements": disagreements,
-        "disagreement_rate": disagreements / max(1, len(pressure_boards)),
-        "average_regret": safe_mean(regrets),
-        "max_regret": max(regrets) if regrets else 0.0,
-    }
-
-
 def run_experiment(config):
-    rows, details = [], {"games": {}, "regret": {}}
-    for exp_id, name, algorithm, use_afterstate, eval_type, leaf_mode, depth in SEARCH_CONFIGS:
+    rows, details = [], {"games": {}}
+    for exp_id, name, algorithm, use_afterstate, eval_type, leaf_mode, depth, use_pruning in SEARCH_CONFIGS:
         summary, records = evaluate_config(
-            config,
-            exp_id,
-            name,
-            algorithm,
-            use_afterstate,
-            eval_type,
-            leaf_mode,
-            depth,
+            config, exp_id, name, algorithm, use_afterstate, eval_type, leaf_mode, depth, use_pruning
         )
         rows.append(summary)
         details["games"][exp_id] = records
         print(
             f"{exp_id} {name}: score={summary['average_score']:.1f}, "
-            f"2048={summary['rate_2048']:.1%}, b_eff={summary['b_eff']:.2f}"
+            f"time/step={summary['time_per_step_ms']:.2f}ms, "
+            f"comp_ratio={summary['compression_ratio']:.3f}"
         )
-
-    regret = compute_regret(config)
-    details["regret"] = regret
-    rows.append(
-        {
-            "experiment": "1-Regret",
-            "variant": "1-D vs 1-G Action Disagreement Regret",
-            "algorithm": "expectimax",
-            "depth": config.search_depth,
-            "leaf_mode": "mixed",
-            "average_score": 0.0,
-            "average_steps": 0.0,
-            "time_per_step_ms": 0.0,
-            "rate_1024": 0.0,
-            "rate_2048": 0.0,
-            "rate_4096": 0.0,
-            "b_eff": 0.0,
-            "compression_ratio": 0.0,
-            "disagreement_rate": regret["disagreement_rate"],
-            "average_regret": regret["average_regret"],
-            "max_regret": regret["max_regret"],
-        }
-    )
 
     paths = write_result_bundle(config.output_dir, "search", config, rows, details)
     print(f"Search results saved: {paths['md']}")
@@ -235,7 +187,7 @@ def run_experiment(config):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run phase-1 Expectimax/Greedy experiments.")
+    parser = argparse.ArgumentParser(description="Run phase-1 Expectimax experiments.")
     add_common_args(parser)
     args = parser.parse_args()
     config = config_from_args(args)

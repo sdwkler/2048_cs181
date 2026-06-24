@@ -7,11 +7,13 @@ import pickle
 import random
 import sys
 import time
+import concurrent.futures
 from dataclasses import dataclass
 
-# 引入绘图与数值计算库
+# 引入绘图、数值计算与进度条库
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
@@ -39,7 +41,6 @@ SHAPES = (
     (4, 5, 6, 8, 9, 10),
 )
 
-# 包含了 3-E：均值-方差惩罚版 Afterstate
 EXPERIMENTS = [
     ("3-A", "Q(s,a)+StateNTuple", "q", "state"),
     ("3-B", "Q(s,a)+AfterstateNTuple", "q", "afterstate"),
@@ -58,10 +59,12 @@ class StepResult:
 
 
 class SparseNTupleValue:
-    def __init__(self, alpha: float = 0.0025):
+    # 【SOTA 秘籍 2】：提高基础学习率，从 0.0025 提升到 0.05
+    def __init__(self, alpha: float = 0.05):
         self.alpha = alpha
-        self.weights: dict[tuple[int, int, int], float] = {}
-        self.traces: dict[tuple[int, int, int], float] = {}
+        # 数据结构简化为 2 维元组 (feature_id, pattern_index)
+        self.weights: dict[tuple[int, int], float] = {}
+        self.traces: dict[tuple[int, int], float] = {}
         self.isom = self._build_isom()
 
     def clear_traces(self) -> None:
@@ -81,23 +84,16 @@ class SparseNTupleValue:
         return all_isom
 
     def _indices(self, b: board):
+        # 【SOTA 秘籍 3】：移除 diff_index，只提取纯净的排列模式特征，防止噪声污染
         for feature_id, shape_isom in enumerate(self.isom):
             for shape in shape_isom:
-                yield (feature_id, 0, self._pattern_index(shape, b))
-                yield (feature_id, 1, self._diff_index(shape, b))
+                yield (feature_id, self._pattern_index(shape, b))
 
     @staticmethod
     def _pattern_index(shape: tuple[int, ...], b: board) -> int:
         index = 0
         for i, pos in enumerate(shape):
             index |= b.at(pos) << (4 * i)
-        return index
-
-    @staticmethod
-    def _diff_index(shape: tuple[int, ...], b: board) -> int:
-        index = 0
-        for i in range(1, len(shape)):
-            index |= (b.at(shape[i]) - b.at(shape[i - 1]) + 15) << (5 * (i - 1))
         return index
 
     def estimate(self, b: board) -> float:
@@ -114,9 +110,11 @@ class SparseNTupleValue:
             if self.traces[k] < 1e-4:
                 del self.traces[k]
 
+        # 【稳健基石】：替换迹 (Replacing Traces)，最高活跃度封顶 1.0，防止由于随机奖励累积导致的 $10^7$ 爆炸
         for index in indices:
-            self.traces[index] = self.traces.get(index, 0.0) + 1.0
+            self.traces[index] = 1.0
 
+        # 分发后的真实单步学习率约为 0.05 / 32 = 0.0015，极其健康
         delta = self.alpha * td_error / len(indices)
         for index, trace_val in self.traces.items():
             self.weights[index] = self.weights.get(index, 0.0) + delta * trace_val
@@ -134,13 +132,13 @@ class QLearningAgent:
         self,
         target_mode: str,
         feature_mode: str,
-        alpha: float = 0.0025,
+        alpha: float = 0.05,  # 同步修改默认值
         gamma: float = 1.0,
     ):
         self.target_mode = target_mode
         self.feature_mode = feature_mode
         self.gamma = gamma
-        self.penalty_lambda = 0.001  # 均值-方差惩罚系数
+        self.penalty_lambda = 0.001  # 风险惩罚系数
 
         if target_mode == "q":
             self.q_heads = [SparseNTupleValue(alpha=alpha) for _ in range(4)]
@@ -151,10 +149,8 @@ class QLearningAgent:
             self.v_head = SparseNTupleValue(alpha=alpha)
             self.m_head = None
         elif target_mode == "mv":
-            # MV 模式：同时学习均值 V 和 平方均值 M
             self.q_heads = None
             self.v_head = SparseNTupleValue(alpha=alpha)
-            # M值的量级较大，使用较小的学习率防止发散
             self.m_head = SparseNTupleValue(alpha=alpha * 0.1)
 
     def clear_traces(self) -> None:
@@ -185,10 +181,14 @@ class QLearningAgent:
         elif self.target_mode == "mv":
             v_val = self.v_head.estimate(feat)
             m_val = self.m_head.estimate(feat)
-            # 计算方差 Var = M - V^2 (防止精度误差导致负数)
-            variance = max(0.0, m_val - v_val * v_val)
-            # 引入均值-方差惩罚
-            return reward + v_val - self.penalty_lambda * math.sqrt(variance)
+            
+            # 尺度完美对齐
+            scale = 0.01
+            v_scaled = v_val * scale
+            variance_scaled = max(0.0, m_val - (v_scaled * v_scaled))
+            std_dev_unscaled = math.sqrt(variance_scaled) / scale
+            
+            return reward + v_val - self.penalty_lambda * std_dev_unscaled
 
     def best_action(self, b: board) -> int:
         actions = legal_actions(b)
@@ -202,13 +202,16 @@ class QLearningAgent:
             return 0.0
         return max(self.action_value(state_raw, action) for action in actions)
 
-    def choose_action(self, b: board, epsilon: float, rng: random.Random) -> int:
+    def choose_action(self, b: board, epsilon: float, rng: random.Random) -> tuple[int, bool]:
+        """【SOTA 秘籍 1：纯贪心决策】2048 自带环境随机探索，永远只选最高分动作，放弃 epsilon 掷骰子"""
         actions = legal_actions(b)
         if not actions:
-            return 0
-        if rng.random() < epsilon:
-            return rng.choice(actions)
-        return max(actions, key=lambda action: self.action_value(b.raw, action))
+            return 0, True
+        
+        # 抛弃 rng.random() < epsilon 的瞎选逻辑，永远坚定地执行最佳策略
+        best_a = max(actions, key=lambda action: self.action_value(b.raw, action))
+        
+        return best_a, True
 
     def update_step(self, state_raw: int, action: int, rng: random.Random, td_lambda: float = 0.5) -> StepResult:
         after_raw, reward = apply_action(state_raw, action)
@@ -234,28 +237,24 @@ class QLearningAgent:
             self.v_head.update(feat, td_error, self.gamma, td_lambda)
 
         elif self.target_mode == "mv":
-            # 1. 评估下一步的最优行动期望
             next_v = self.best_action_value(next_raw)
             current_v = self.v_head.estimate(feat)
             
-            # V 头更新目标 (同 V 模式)
             target_v = self.gamma * next_v
             td_error_v = target_v - current_v
             self.v_head.update(feat, td_error_v, self.gamma, td_lambda)
 
-            # 2. 评估下一步的平方期望 (为了稳定，Reward 缩放)
             scale = 0.01
             r_scaled = reward * scale
+            next_v_scaled = next_v * scale 
             next_m = self.m_head.estimate(board(next_raw))
             current_m = self.m_head.estimate(feat)
             
-            # M 头更新目标: E[R^2 + 2 * R * gamma * V(s') + gamma^2 * M(s')]
-            target_m = r_scaled**2 + 2 * self.gamma * r_scaled * (next_v * scale) + (self.gamma**2) * next_m
+            target_m = (r_scaled**2) + 2 * self.gamma * r_scaled * next_v_scaled + (self.gamma**2) * next_m
             td_error_m = target_m - current_m
-            # M 头同样使用资格迹更新
             self.m_head.update(feat, td_error_m, self.gamma, td_lambda)
             
-            td_error = td_error_v # 总体监控依然以 V 的误差为准
+            td_error = td_error_v
 
         return StepResult(reward, td_error, next_raw, False)
 
@@ -271,13 +270,6 @@ class QLearningAgent:
         }
         with open(path, "wb") as f:
             pickle.dump(payload, f, protocol=pickle.HIGHEST_PROTOCOL)
-
-
-def epsilon_for_episode(episode: int, total_episodes: int) -> float:
-    if total_episodes <= 1:
-        return 0.01
-    frac = (episode - 1) / (total_episodes - 1)
-    return 1.0 + frac * (0.01 - 1.0)
 
 
 def random_decision_board(seed: int, max_steps: int = 200) -> board:
@@ -296,7 +288,6 @@ def random_decision_board(seed: int, max_steps: int = 200) -> board:
         popup_with_rng(b, rng)
     return b
 
-
 def policy_decision_board(agent: QLearningAgent, seed: int, max_warmup_steps: int = 200) -> board:
     rng = random.Random(seed)
     b = board()
@@ -314,7 +305,6 @@ def policy_decision_board(agent: QLearningAgent, seed: int, max_warmup_steps: in
         popup_with_rng(b, rng)
     return b
 
-
 def rollout_return(agent: QLearningAgent, start_raw: int, seed: int, gamma: float = 1.0) -> float:
     rng = random.Random(seed)
     b = board(start_raw)
@@ -331,7 +321,6 @@ def rollout_return(agent: QLearningAgent, start_raw: int, seed: int, gamma: floa
         b = next_b
     return total
 
-
 def collect_bias(agent: QLearningAgent, count: int, seed: int) -> dict:
     biases = []
     for i in range(count):
@@ -347,27 +336,26 @@ def collect_bias(agent: QLearningAgent, count: int, seed: int) -> dict:
     }
 
 
-def train_one(config, exp_id: str, variant: str, target_mode: str, feature_mode: str, model_dir: str):
+def train_one(config, exp_id: str, variant: str, target_mode: str, feature_mode: str, model_dir: str, worker_id: int = 0):
     board.lookup.init()
     rng = random.Random(config.seed + int(exp_id[-1], 36) * 1000)
     agent = QLearningAgent(target_mode=target_mode, feature_mode=feature_mode)
     td_errors = []
     
-    # 周期性监控数据存储
     metrics = {"episodes": [], "td_rms": [], "train_scores": [], "bias": []}
     window_scores = []
-    
     td_lambda = getattr(config, 'q_td_lambda', 0.5)
-    bias_interval = config.q_episodes // 5  # 每 20% 局数测一次 Bias
+    bias_interval = max(1, config.q_episodes // 100) 
 
     start_time = time.perf_counter()
 
-    for episode in progress(range(1, config.q_episodes + 1), desc=variant[:24], leave=False):
+    pbar_desc = f"{exp_id} {variant}"[:22].ljust(22)
+    
+    for episode in tqdm(range(1, config.q_episodes + 1), desc=pbar_desc, position=worker_id, leave=True):
         agent.clear_traces()
         b = board()
         popup_with_rng(b, rng)
         popup_with_rng(b, rng)
-        epsilon = epsilon_for_episode(episode, config.q_episodes)
         steps = 0
         score = 0
         
@@ -375,8 +363,11 @@ def train_one(config, exp_id: str, variant: str, target_mode: str, feature_mode:
             actions = legal_actions(b)
             if not actions:
                 break
-            action = agent.choose_action(b, epsilon, rng)
+                
+            # 探索率设为 0 (纯贪心)
+            action, _ = agent.choose_action(b, 0.0, rng)
             step = agent.update_step(b.raw, action, rng, td_lambda)
+            
             if step.terminal:
                 break
             
@@ -387,7 +378,6 @@ def train_one(config, exp_id: str, variant: str, target_mode: str, feature_mode:
             
         window_scores.append(score)
 
-        # 记录滑动窗口的 TD-Error 和 平均分
         if len(td_errors) >= config.q_td_window:
             rms = math.sqrt(safe_mean(err * err for err in td_errors))
             metrics["episodes"].append(episode)
@@ -396,16 +386,13 @@ def train_one(config, exp_id: str, variant: str, target_mode: str, feature_mode:
             td_errors.clear()
             window_scores.clear()
             
-        # 周期性收集 Bias 供画图使用
         if episode % bias_interval == 0:
-            bias_res = collect_bias(agent, 20, config.seed + 40_000 + episode)
+            bias_res = collect_bias(agent, 10, config.seed + 40_000 + episode)
             metrics["bias"].append((episode, bias_res["average_bias"]))
 
-    # 训练后保存模型
     model_path = os.path.join(model_dir, f"qlearning_{exp_id.lower().replace('-', '')}.pkl")
     agent.save(model_path)
 
-    # 最终评估 10 局
     def choose_action(b: board) -> int:
         return agent.best_action(b)
 
@@ -434,45 +421,37 @@ def train_one(config, exp_id: str, variant: str, target_mode: str, feature_mode:
     return row, metrics
 
 
-def smooth_curve(points, window=50):
-    """
-    使用一维卷积计算滑动平均。
-    参数 window 决定了平滑的力度，越大越平滑。
-    """
+def smooth_curve(points, window=10):
     if len(points) < window:
         return points
     w = np.ones(window) / window
-    # mode='valid' 确保窗口完全覆盖数据点，避免边缘效应
     smoothed = np.convolve(points, w, mode='valid')
     return smoothed
 
 
 def generate_plots(all_metrics, picture_dir):
-    """根据收集的指标数据绘制顶级学术图表（带有滑动平均平滑效果）"""
     os.makedirs(picture_dir, exist_ok=True)
     colors = {"3-A": "red", "3-B": "orange", "3-C": "gray", "3-D": "blue", "3-E": "green"}
     
-    # 根据跑的局数可以动态调整滑动窗口大小。如果跑 10 万局，可以将这里调成 500 或 1000。
-    SMOOTH_WINDOW = 200
+    sample_scores_len = len(next(iter(all_metrics.values()))["train_scores"])
+    sample_bias_len = len(next(iter(all_metrics.values()))["bias"])
     
-    # ---------------------------------------------------------
-    # 图 1: 学习曲线 (Training Scores)
-    # ---------------------------------------------------------
+    SCORE_WINDOW = max(1, sample_scores_len // 10)
+    BIAS_WINDOW = max(1, sample_bias_len // 10)
+    
+    # 图 1: 学习曲线
     plt.figure(figsize=(10, 6))
     for exp_id, metrics in all_metrics.items():
         if metrics["episodes"]:
             episodes = metrics["episodes"]
             scores = metrics["train_scores"]
             
-            # 画半透明的原始数据背景作为噪音底色
             plt.plot(episodes, scores, color=colors[exp_id], alpha=0.15, linewidth=1)
             
-            # 画平滑后的主线
-            if len(scores) >= SMOOTH_WINDOW:
-                smoothed_scores = smooth_curve(scores, SMOOTH_WINDOW)
-                # 对齐 X 轴：取对应的 episode 截断区间
-                smooth_episodes = episodes[SMOOTH_WINDOW - 1:] 
-                plt.plot(smooth_episodes, smoothed_scores, label=f"{exp_id} (MA={SMOOTH_WINDOW})", color=colors[exp_id], linewidth=2.5)
+            if len(scores) >= SCORE_WINDOW:
+                smoothed = smooth_curve(scores, SCORE_WINDOW)
+                sm_episodes = episodes[SCORE_WINDOW - 1:] 
+                plt.plot(sm_episodes, smoothed, label=f"{exp_id}", color=colors[exp_id], linewidth=2.5)
             else:
                 plt.plot(episodes, scores, label=exp_id, color=colors[exp_id], linewidth=2.5)
 
@@ -485,23 +464,19 @@ def generate_plots(all_metrics, picture_dir):
     plt.savefig(os.path.join(picture_dir, "learning_curve_smoothed.png"), dpi=300)
     plt.close()
 
-    # ---------------------------------------------------------
-    # 图 2: TD-Error 波动 (对数坐标系)
-    # ---------------------------------------------------------
+    # 图 2: TD-Error 波动
     plt.figure(figsize=(10, 6))
     for exp_id, metrics in all_metrics.items():
         if metrics["episodes"]:
             episodes = metrics["episodes"]
             td_rms = metrics["td_rms"]
             
-            # 画半透明原始背景
             plt.plot(episodes, td_rms, color=colors[exp_id], alpha=0.15, linewidth=1)
             
-            # 画平滑主线
-            if len(td_rms) >= SMOOTH_WINDOW:
-                smoothed_td = smooth_curve(td_rms, SMOOTH_WINDOW)
-                smooth_episodes = episodes[SMOOTH_WINDOW - 1:]
-                plt.plot(smooth_episodes, smoothed_td, label=exp_id, color=colors[exp_id], linewidth=2)
+            if len(td_rms) >= SCORE_WINDOW:
+                smoothed = smooth_curve(td_rms, SCORE_WINDOW)
+                sm_episodes = episodes[SCORE_WINDOW - 1:]
+                plt.plot(sm_episodes, smoothed, label=exp_id, color=colors[exp_id], linewidth=2)
             else:
                 plt.plot(episodes, td_rms, label=exp_id, color=colors[exp_id], linewidth=2)
 
@@ -515,49 +490,70 @@ def generate_plots(all_metrics, picture_dir):
     plt.savefig(os.path.join(picture_dir, "td_error_volatility_smoothed.png"), dpi=300)
     plt.close()
     
-    # ---------------------------------------------------------
-    # 图 3: 过估计偏差 (Overestimation Bias) 
-    # 此项数据点较少，无需平滑，直接绘制
-    # ---------------------------------------------------------
+    # 图 3: 过估计偏差
     plt.figure(figsize=(10, 6))
     for exp_id, metrics in all_metrics.items():
         if metrics["bias"]:
             episodes, biases = zip(*metrics["bias"])
-            plt.plot(episodes, biases, marker='o', label=exp_id, color=colors[exp_id], linewidth=2.5, markersize=8)
+            
+            plt.plot(episodes, biases, color=colors[exp_id], alpha=0.15, linewidth=1, marker='.', markersize=4)
+            
+            if len(biases) >= BIAS_WINDOW:
+                smoothed = smooth_curve(biases, BIAS_WINDOW)
+                sm_episodes = episodes[BIAS_WINDOW - 1:]
+                plt.plot(sm_episodes, smoothed, label=exp_id, color=colors[exp_id], linewidth=2.5)
+            else:
+                plt.plot(episodes, biases, label=exp_id, color=colors[exp_id], linewidth=2.5, marker='o')
     
-    plt.axhline(0, color='black', linestyle='--', linewidth=2, label='Zero Bias (Ideal)')
+    plt.axhline(0, color='black', linestyle='--', linewidth=2, label='Zero Bias')
     plt.title("Empirical Overestimation Bias over Time", fontsize=14)
     plt.xlabel("Training Episodes", fontsize=12)
     plt.ylabel("Prediction Bias", fontsize=12)
     plt.legend()
     plt.grid(True, linestyle="--", alpha=0.6)
     plt.tight_layout()
-    plt.savefig(os.path.join(picture_dir, "overestimation_bias.png"), dpi=300)
+    plt.savefig(os.path.join(picture_dir, "overestimation_bias_smoothed.png"), dpi=300)
     plt.close()
 
 
-def run_experiment(config):
-    rows = []
-    all_metrics = {}
+def run_experiment_parallel(config):
     timestamp_str = timestamp()
     model_dir = os.path.join("models","phrase_1","qlearning_runs", timestamp_str)
     picture_dir = os.path.join("models", "phrase_1", "picture", timestamp_str)
+    os.makedirs(model_dir, exist_ok=True)
+    os.makedirs(picture_dir, exist_ok=True)
+
+    rows = []
+    all_metrics = {}
     
-    for exp_id, variant, target_mode, feature_mode in EXPERIMENTS:
-        row, metrics = train_one(config, exp_id, variant, target_mode, feature_mode, model_dir)
-        rows.append(row)
-        all_metrics[exp_id] = metrics
-        print(
-            f"{exp_id} {variant}: score={row['average_score']:.1f}, "
-            f"td_rms={row['td_error_rms_final']:.2f}, bias={row['average_bias']:.2f}"
-        )
-        
-    # 生成带有平滑效果的高级折线图
-    print(f"Generating smoothed performance plots in {picture_dir} ...")
+    num_experiments = len(EXPERIMENTS)
+    print(f"===========================================================")
+    print(f"Launching {num_experiments} experiments concurrently...")
+    print(f"Your CPU usage will spike. Please wait...")
+    print(f"===========================================================\n")
+
+    with concurrent.futures.ProcessPoolExecutor(max_workers=num_experiments) as executor:
+        futures = []
+        for i, (exp_id, variant, target_mode, feature_mode) in enumerate(EXPERIMENTS):
+            futures.append(
+                executor.submit(train_one, config, exp_id, variant, target_mode, feature_mode, model_dir, i)
+            )
+
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                row, metrics = future.result()
+                exp_id = row["experiment"]
+                rows.append(row)
+                all_metrics[exp_id] = metrics
+                tqdm.write(f"\n✅ {exp_id} Finished! Score: {row['average_score']:.1f}, TD_RMS: {row['td_error_rms_final']:.2f}, Bias: {row['average_bias']:.2f}")
+            except Exception as exc:
+                tqdm.write(f"\n❌ An experiment generated an exception: {exc}")
+
+    print(f"\nAll experiments completed! Generating combined plots...")
     generate_plots(all_metrics, picture_dir)
     
-    # 写入 Markdown 表格
-    paths = write_result_bundle(config.output_dir, "qlearning", config, rows, {})
+    rows = sorted(rows, key=lambda x: x["experiment"])
+    paths = write_result_bundle(config.output_dir, "qlearning_parallel", config, rows, {})
     print(f"Q-learning results saved: {paths['md']}")
     return paths
 
@@ -567,8 +563,11 @@ def main():
     add_common_args(parser)
     args = parser.parse_args()
     config = config_from_args(args)
-    run_experiment(config)
+    
+    run_experiment_parallel(config)
 
 
 if __name__ == "__main__":
+    import multiprocessing
+    multiprocessing.freeze_support()
     main()

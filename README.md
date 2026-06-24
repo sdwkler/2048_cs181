@@ -45,3 +45,14 @@ pip install tqdm numpy
 set PYTHONUTF8=1
 chcp 65001
 set PYTHONIOENCODING=utf-8
+
+
+conda install -c conda-forge matplotlib
+```
+
+借鉴文献：
+
+https://github.com/YangRui2015/2048_env.git
+
+https://openreview.net/forum?id=X6D9bAHhBQ1
+

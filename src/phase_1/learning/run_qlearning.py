@@ -12,7 +12,7 @@ from dataclasses import dataclass
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
 from src.environments.base_env import board
-from src.phase_1.common import (
+from src.common import (
     ACTION_NAMES,
     add_common_args,
     apply_action,
@@ -366,7 +366,7 @@ def train_one(config, exp_id: str, variant: str, target_mode: str, feature_mode:
 
 def run_experiment(config):
     rows, details = [], {}
-    model_dir = os.path.join("models", "qlearning_runs", timestamp())
+    model_dir = os.path.join("models","phrase_1","qlearning_runs", timestamp())
     for exp_id, variant, target_mode, feature_mode in EXPERIMENTS:
         row, detail = train_one(config, exp_id, variant, target_mode, feature_mode, model_dir)
         rows.append(row)

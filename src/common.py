@@ -84,8 +84,14 @@ def default_config(mode: str, seed: int, workers: int | None, output_dir: str) -
         planning_rollouts=[200, 500, 1000, 2000],
         planning_stability_runs=50,
         planning_eval_games=10,
+        # max_game_steps=None,
+        # q_episodes=100_000,
+        # q_eval_games=10,
+        # q_bias_episode=90_000,
+        # q_bias_samples=100,
+        # q_td_window=1000,
         max_game_steps=None,
-        q_episodes=100_000,
+        q_episodes=10_000,
         q_eval_games=10,
         q_bias_episode=90_000,
         q_bias_samples=100,
@@ -97,7 +103,13 @@ def add_common_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--mode", choices=["smoke", "full"], default="smoke")
     parser.add_argument("--seed", type=int, default=181)
     parser.add_argument("--workers", type=int, default=None)
-    parser.add_argument("--output-dir", default=os.path.join("models", "eval_results"))
+    parser.add_argument("--output-dir", default=os.path.join("models","phrase_1","eval_results"))
+
+def add_common_args_2(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--mode", choices=["smoke", "full"], default="smoke")
+    parser.add_argument("--seed", type=int, default=181)
+    parser.add_argument("--workers", type=int, default=None)
+    parser.add_argument("--output-dir", default=os.path.join("models","phrase_2", "eval_results"))
 
 
 def config_from_args(args: argparse.Namespace) -> ExperimentConfig:
@@ -203,18 +215,20 @@ def entropy_from_counts(counts: dict[Any, int]) -> float:
             entropy -= p * math.log(p)
     return entropy
 
-
 def summarize_games(records: list[dict[str, float]]) -> dict[str, float]:
     max_tiles = [r["max_tile"] for r in records]
+    total_games = max(1, len(max_tiles))
     return {
         "average_score": safe_mean(r["score"] for r in records),
         "average_steps": safe_mean(r["steps"] for r in records),
         "time_per_step_ms": safe_mean(r["time_per_step_ms"] for r in records),
-        "rate_1024": sum(1 for t in max_tiles if t >= 1024) / max(1, len(max_tiles)),
-        "rate_2048": sum(1 for t in max_tiles if t >= 2048) / max(1, len(max_tiles)),
-        "rate_4096": sum(1 for t in max_tiles if t >= 4096) / max(1, len(max_tiles)),
+        "rate_1024": sum(1 for t in max_tiles if t >= 1024) / total_games,
+        "rate_2048": sum(1 for t in max_tiles if t >= 2048) / total_games,
+        "rate_4096": sum(1 for t in max_tiles if t >= 4096) / total_games,
+        "rate_8192": sum(1 for t in max_tiles if t >= 8192) / total_games,   # 【新增】
+        "rate_16384": sum(1 for t in max_tiles if t >= 16384) / total_games, # 【新增】
+        "rate_32768": sum(1 for t in max_tiles if t >= 32768) / total_games, # 【新增】
     }
-
 
 def generate_pressure_boards(count: int, seed: int, max_empty: int = 3) -> list[int]:
     board.lookup.init()

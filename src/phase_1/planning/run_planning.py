@@ -7,7 +7,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
 from src.environments.base_env import board
-from src.phase_1.common import (
+from src.common import (
     ACTION_NAMES,
     add_common_args,
     config_from_args,

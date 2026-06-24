@@ -8,7 +8,7 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
-from src.phase_1.common import ensure_output_dir, format_cell, timestamp
+from src.common import ensure_output_dir, format_cell, timestamp
 
 
 REQUIRED = {
