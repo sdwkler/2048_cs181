@@ -56,3 +56,4 @@ https://github.com/YangRui2015/2048_env.git
 
 https://openreview.net/forum?id=X6D9bAHhBQ1
 
+Silver et al. (Nature 2017) 《Mastering the game of Go without human knowledge》

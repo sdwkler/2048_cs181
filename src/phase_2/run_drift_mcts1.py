@@ -15,11 +15,11 @@ from src.common import (
     ACTION_NAMES, add_common_args, config_from_args, generate_pressure_boards,
     max_tile_value, popup_with_rng, progress, safe_mean, summarize_games, write_result_bundle
 )
-from src.phase_2.mcts3_node import MCTSAgent
+from src.phase_2.mcts3_node1 import MCTSAgent
 
-DRIFT_PROBS = [0.1,0.15, 0.2,0.25, 0.3,0.35, 0.4,0.45, 0.5]
-SIMULATIONS = 1000
-MACRO_GAMES =50
+DRIFT_PROBS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+SIMULATIONS = 500      
+MACRO_GAMES = 20
 
 MCTS_CONFIGS = [
     ("MCTS-State", "State MCTS", False),
@@ -44,6 +44,7 @@ def drift_game_worker(args):
     while True:
         start = time.perf_counter()
         
+        # 完美对齐 MCTS 核心引擎的四元组返回！
         action, root_q_var, visit_entropy, step_max_depth = agent.get_best_action(b, num_simulations=SIMULATIONS)
         
         step_times.append(time.perf_counter() - start)
@@ -183,19 +184,19 @@ def run_experiment(config):
             summary = summarize_games(records)
             avg_variance = safe_mean(r["micro_variance"] for r in records)
             avg_entropy = safe_mean(r["micro_entropy"] for r in records)
-            peak_depth = max(r["micro_depth"] for r in records)
-            
+            avg_depth = safe_mean(r["micro_depth"] for r in records)
+
             row = {
                 "p4_prob": env_p4, "experiment": exp_id, "variant": name,
                 **summary,
                 "micro_variance": avg_variance,
                 "micro_entropy": avg_entropy,
-                "micro_depth": peak_depth
+                "micro_depth": avg_depth
             }
             rows.append(row)
             
             print(f"  [{exp_id}] Score: {summary['average_score']:.0f} | Time: {summary['time_per_step_ms']:.1f}ms")
-            print(f"  [Anatomy Tracker] Action Discriminability (Std): {avg_variance:.2f} | Entropy: {avg_entropy:.2f} | Tree Depth: {peak_depth:.0f}")
+            print(f"  [Anatomy Tracker] Action Discriminability (Std): {avg_variance:.2f} | Entropy: {avg_entropy:.2f} | Tree Depth: {avg_depth:.0f}")
 
     paths = write_result_bundle(config.output_dir, "mcts_drift_robustness", config, rows, {})
     
