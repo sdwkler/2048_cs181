@@ -146,7 +146,17 @@ class QLearningAgent:
             self.q_heads = None
             self.v_head = SparseNTupleValue(alpha=alpha)
             self.m_head = SparseNTupleValue(alpha=alpha * 0.1)
-
+    def set_alpha(self, new_alpha: float) -> None:
+        """【新增】：动态更新所有评估头（Heads）的学习率"""
+        if self.target_mode == "q":
+            for head in self.q_heads:
+                head.alpha = new_alpha
+        elif self.target_mode == "v":
+            self.v_head.alpha = new_alpha
+        elif self.target_mode == "mv":
+            self.v_head.alpha = new_alpha
+            # 保持方差头（M-head）的学习率比例，原代码中是主学习率的 10%
+            self.m_head.alpha = new_alpha * 0.1
     def clear_traces(self) -> None:
         if self.target_mode == "q":
             for head in self.q_heads:
@@ -345,11 +355,19 @@ def train_one(config, exp_id: str, variant: str, target_mode: str, feature_mode:
     metrics = {"episodes": [], "td_rms": [], "normalized_td_rms": [], "train_scores": [], "bias": [], "norm_bias": []}
     window_scores = []
     td_lambda = getattr(config, 'q_td_lambda', 0.5)
-    bias_interval = max(1, config.q_episodes // 100) 
+    bias_interval = min(100, config.q_episodes // 100) 
     
-    # 【新增退火参数】
+    # 【新增：双重退火参数设置】
+    # ==========================================
+    # 1. 探索率 (Epsilon) 参数
     epsilon_start = 0.10
     epsilon_end = 0.0001
+    epsilon_decay_cutoff = 0.80  # 在训练进行到 80% 时降到最低点
+    
+    # 2. 学习率 (Alpha) 参数
+    alpha_start = 0.05
+    alpha_end = 0.002            # 最终学习率，退火到底部精调
+    # ==========================================
 
     start_time = time.perf_counter()
     pbar_desc = f"{exp_id} {variant}"[:22].ljust(22)
@@ -361,17 +379,24 @@ def train_one(config, exp_id: str, variant: str, target_mode: str, feature_mode:
         popup_with_rng(b, rng)
         steps = 0
         score = 0
+        # ==========================================
+        # 【新增：计算当前 Episode 的退火状态】
+        # ==========================================
+        # 1. 计算 Epsilon (带截断)
+        eps_progress = min(1.0, episode / (config.q_episodes * epsilon_decay_cutoff))
+        current_epsilon = epsilon_start - (epsilon_start - epsilon_end) * eps_progress
         
-        # 【新增全局线性退火逻辑】
-        decay_progress = episode / config.q_episodes
-        current_epsilon = epsilon_start - (epsilon_start - epsilon_end) * decay_progress
+        # 2. 计算 Alpha (全局线性退火)
+        alpha_progress = episode / config.q_episodes
+        current_alpha = alpha_start - (alpha_start - alpha_end) * alpha_progress
+        
+        # 3. 将新的学习率注入到 Agent 中
+        agent.set_alpha(current_alpha)
         
         while config.max_game_steps is None or steps < config.max_game_steps:
             actions = legal_actions(b)
             if not actions:
                 break
-                
-            # 传入当前动态退火后的 epsilon
             action, _ = agent.choose_action(b, current_epsilon, rng)
             step = agent.update_step(b.raw, action, rng, td_lambda)
             
@@ -453,8 +478,8 @@ def generate_plots(all_metrics, picture_dir):
     sample_scores_len = len(next(iter(all_metrics.values()))["train_scores"])
     sample_bias_len = len(next(iter(all_metrics.values()))["bias"])
     
-    SCORE_WINDOW = max(1, sample_scores_len // 10)
-    BIAS_WINDOW = max(1, sample_bias_len // 10)
+    SCORE_WINDOW = min(10, sample_scores_len // 10)
+    BIAS_WINDOW = min(10, sample_bias_len // 10)
     
     # 图 1: 学习曲线
     plt.figure(figsize=(10, 6))

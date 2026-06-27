@@ -27,8 +27,8 @@ MIDDLE_CONFIGS = [
     ("M2-After-Heur", "Afterstate + Heuristic", True, "heuristic", "afterstate", 2),
 
     ("M3-State-NT", "State + StateNTuple", False, "ntuple_state", "state", 2),
-    ("M4-State-ANT", "State + AfterstateNTuple", False, "ntuple_afterstate", "state", 2),
-    ("M5-After-NT", "Afterstate + StateNTuple", True, "ntuple_state", "afterstate", 2),
+    # ("M4-State-ANT", "State + AfterstateNTuple", False, "ntuple_afterstate", "state", 2),
+    # ("M5-After-NT", "Afterstate + StateNTuple", True, "ntuple_state", "afterstate", 2),
     ("M6-After-ANT", "Afterstate + AfterstateNTuple", True, "ntuple_afterstate", "afterstate", 2)
 ]
 
@@ -69,7 +69,7 @@ def build_search_agent(use_afterstate: bool, eval_type: str, leaf_mode: str, p4_
         value_func=get_value_func(eval_type), 
         leaf_mode=leaf_mode,
         use_pruning=False, 
-        p4_prob=0.1  # 核心死锁：AI 主观信仰锁死为 0.1
+        p4_prob=p4_prob  # 核心死锁：AI 主观信仰锁死为 0.1
     )
 
 def search_game_worker(args):
@@ -283,7 +283,7 @@ def run_experiment(config):
     paths = write_result_bundle(config.output_dir, "expectimax_drift", config, rows, {})
     
     # 调用绘图逻辑
-    picture_dir = os.path.join("models", "phase2", "picture","search_drift")
+    picture_dir = os.path.join("models", "phase2_new", "picture","search_drift")
     print(f"\n🎨 Generating Academic Plots in {picture_dir} ...")
     generate_plots(rows, picture_dir)
     
@@ -299,6 +299,6 @@ if __name__ == "__main__":
     
     # 【强制隔离输出目录】
     config = config.__class__(
-        **{**config.__dict__, "output_dir": os.path.join("models", "phase2", "results","expectimax_drift")}
+        **{**config.__dict__, "output_dir": os.path.join("models", "phase2_new", "results","expectimax_drift")}
     )
     run_experiment(config)
