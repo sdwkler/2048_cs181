@@ -258,7 +258,7 @@ class learning:
             avg_score = sum(self.scores) / len(self.scores)
             info(f"{n}\tavg = {avg_score}\tmax = {max(self.scores)}")
             stat = [ self.maxtile.count(i) for i in range(16) ]
-            t, c, coef = 100 / unit
+            t, c, coef = 0, 0, 100 / unit
             while c < unit:
                 if stat[t] != 0:
                     accu = sum(stat[t:])
