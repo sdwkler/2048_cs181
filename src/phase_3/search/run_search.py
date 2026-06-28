@@ -1,4 +1,5 @@
 import argparse
+import math
 import os
 import random
 import sys
@@ -23,24 +24,42 @@ from src.common import (
     summarize_games,
     write_result_bundle,
 )
-from src.evaluators import HeuristicEvaluator, NTupleEvaluator
+from src.evaluators import NTupleEvaluator
 from src.phase_3.search.expectimax import ExpectimaxAgent, GreedyAgent
+
+# 【完美接入你 MCTS 中的极速查表评估器】
+from src.phase_1.planning.mcts3_new_node import FastHeuristic
 
 _PROCESS_MODEL_CACHE = {}
 
 # =======================================================================
-# 【极其严谨的 3 组终极消融实验矩阵】
-# 参数含义: (exp_id, name, algorithm, use_afterstate(拓扑), eval_type, leaf_mode(公式), depth, use_pruning(剪枝))
+# 【极其严谨的 10 组终极消融实验矩阵】
+# 参数: (exp_id, name, algorithm, use_afterstate, eval_type, leaf_mode, depth, use_pruning, risk_beta)
 # =======================================================================
 SEARCH_CONFIGS = [
-    # 1. 传统 State NTuple (算力爆炸，但能感知危险)
-    ("A-1", "State NTuple", "expectimax", False, "ntuple_state", "state", 2, False),
+    # 1. 基础对照组 (仅使用 FastHeuristic 评估)
+    ("H-1", "State Heuristic (No Risk)", "expectimax", False, "heuristic", "state", 2, False, 0.0),
+    ("H-2", "Afterstate Heuristic (No Risk)", "expectimax", True, "heuristic", "afterstate", 2, False, 0.0),
     
-    # 2. 传统 Afterstate NTuple (算力极低，速度极快，但容易对危机盲目而暴毙)
-    ("A-2", "Afterstate NTuple", "expectimax", True, "ntuple_afterstate", "afterstate", 2, False),
-    
-    # 3. RSZ 双轨制 Dual NTuple (算力极低，依靠 V_risk O(1) 预判危险，结合了速度与安全)
-    ("A-3", "Dual Risk-Aware NTuple", "expectimax", True, "ntuple_dual", "afterstate_dual_risk", 2, False),
+    # 2. Heuristic Mean + N-Tuple Risk 矩阵测试 (Beta 0.1 -> 0.4)
+    ("H-3.1", "Heuristic + Risk (b=0.1)", "expectimax", True, "heuristic_dual_risk", "afterstate_dual_risk", 2, False, 0.1),
+    ("H-3.2", "Heuristic + Risk (b=0.2)", "expectimax", True, "heuristic_dual_risk", "afterstate_dual_risk", 2, False, 0.2),
+    ("H-3.3", "Heuristic + Risk (b=0.3)", "expectimax", True, "heuristic_dual_risk", "afterstate_dual_risk", 2, False, 0.3),
+    ("H-3.4", "Heuristic + Risk (b=0.4)", "expectimax", True, "heuristic_dual_risk", "afterstate_dual_risk", 2, False, 0.4),
+    ("H-3.5", "Heuristic + Risk (b=0.5)", "expectimax", True, "heuristic_dual_risk", "afterstate_dual_risk", 2, False, 0.5),
+    ("H-3.6", "Heuristic + Risk (b=0.6)", "expectimax", True, "heuristic_dual_risk", "afterstate_dual_risk", 2, False, 0.6),
+    ("H-3.7", "Heuristic + Risk (b=0.7)", "expectimax", True, "heuristic_dual_risk", "afterstate_dual_risk", 2, False, 0.7),
+    ("H-3.8", "Heuristic + Risk (b=0.8)", "expectimax", True, "heuristic_dual_risk", "afterstate_dual_risk", 2, False, 0.8),
+
+    # 3. Dual N-Tuple (Mean + Risk) 矩阵测试 (Beta 0.1 -> 0.4)
+    ("N-3.1", "Dual N-Tuple (b=0.1)", "expectimax", True, "ntuple_dual", "afterstate_dual_risk", 2, False, 0.1),
+    ("N-3.2", "Dual N-Tuple (b=0.2)", "expectimax", True, "ntuple_dual", "afterstate_dual_risk", 2, False, 0.2),
+    ("N-3.3", "Dual N-Tuple (b=0.3)", "expectimax", True, "ntuple_dual", "afterstate_dual_risk", 2, False, 0.3),
+    ("N-3.4", "Dual N-Tuple (b=0.4)", "expectimax", True, "ntuple_dual", "afterstate_dual_risk", 2, False, 0.4),
+    ("N-3.5", "Dual N-Tuple (b=0.5)", "expectimax", True, "ntuple_dual", "afterstate_dual_risk", 2, False, 0.5),
+    ("N-3.6", "Dual N-Tuple (b=0.6)", "expectimax", True, "ntuple_dual", "afterstate_dual_risk", 2, False, 0.6),
+    ("N-3.7", "Dual N-Tuple (b=0.7)", "expectimax", True, "ntuple_dual", "afterstate_dual_risk", 2, False, 0.7),
+    ("N-3.8", "Dual N-Tuple (b=0.8)", "expectimax", True, "ntuple_dual", "afterstate_dual_risk", 2, False, 0.8),
 ]
 
 
@@ -63,10 +82,9 @@ def build_ntuple(eval_type: str) -> learning:
         devnull.close()
 
     # 映射文件路径
-    if eval_type == "ntuple_afterstate": weight_file = "models/2048_afterstate.bin"
-    elif eval_type == "ntuple_state": weight_file = "models/2048_state.bin"
-    elif eval_type == "ntuple_dual_mean": weight_file = "models/2048_dual_mean.bin"
+    if eval_type == "ntuple_dual_mean": weight_file = "models/2048_dual_mean.bin"
     elif eval_type == "ntuple_dual_risk": weight_file = "models/2048_dual_risk.bin"
+    elif eval_type == "ntuple_heuristic_risk": weight_file = "models/2048_heuristic_risk.bin"
     else: raise ValueError(f"Unknown eval_type: {eval_type}")
 
     if not os.path.exists(weight_file):
@@ -77,13 +95,32 @@ def build_ntuple(eval_type: str) -> learning:
 
 def get_value_func(eval_type: str):
     """
-    返回一个 tuple (mean_evaluator, risk_evaluator)
-    对于不需要 risk 的传统模型，risk_evaluator 为 None
+    返回 tuple (mean_evaluator, risk_evaluator)
     """
-    if eval_type == "heuristic":
-        return HeuristicEvaluator().evaluate, None
+    # =======================================================
+    # 【核心修复：类型适配包装器】
+    # Expectimax 传过来的是 board 对象，但 FastHeuristic 需要的是 board.raw (整数)
+    # 用一个 wrapper 桥接，并确保 FastHeuristic 在进程中是全局单例以共享缓存！
+    # =======================================================
+    if "heuristic" in eval_type and "fast_heuristic" not in _PROCESS_MODEL_CACHE:
+        _PROCESS_MODEL_CACHE["fast_heuristic"] = FastHeuristic()
         
-    # 【核心】：加载双轨制模型
+    def wrapped_heuristic(b: board, is_afterstate: bool) -> float:
+        return _PROCESS_MODEL_CACHE["fast_heuristic"].evaluate(b.raw, is_afterstate)
+
+    # 1. 纯人工规则模式 (仅返回 Mean)
+    if eval_type == "heuristic":
+        return wrapped_heuristic, None
+        
+    # 2. 人工规则作 Mean，刚刚蒸馏出的 N-Tuple 雷达作 Risk
+    if eval_type == "heuristic_dual_risk":
+        mean_func = wrapped_heuristic
+        if "ntuple_heuristic_risk" not in _PROCESS_MODEL_CACHE:
+            _PROCESS_MODEL_CACHE["ntuple_heuristic_risk"] = build_ntuple("ntuple_heuristic_risk")
+        risk_func = NTupleEvaluator(_PROCESS_MODEL_CACHE["ntuple_heuristic_risk"]).evaluate
+        return mean_func, risk_func
+
+    # 3. 纯双轨 N-Tuple 模式
     if eval_type == "ntuple_dual":
         if "ntuple_dual_mean" not in _PROCESS_MODEL_CACHE:
             _PROCESS_MODEL_CACHE["ntuple_dual_mean"] = build_ntuple("ntuple_dual_mean")
@@ -92,18 +129,11 @@ def get_value_func(eval_type: str):
         risk_func = NTupleEvaluator(_PROCESS_MODEL_CACHE["ntuple_dual_risk"]).evaluate
         return mean_func, risk_func
 
-    # 传统单模型
-    if eval_type not in _PROCESS_MODEL_CACHE:
-        _PROCESS_MODEL_CACHE[eval_type] = build_ntuple(eval_type)
-    return NTupleEvaluator(_PROCESS_MODEL_CACHE[eval_type]).evaluate, None
+    raise ValueError(f"Unhandled eval_type in get_value_func: {eval_type}")
 
 
-def build_search_agent(algorithm: str, use_afterstate: bool, eval_type: str, leaf_mode: str, use_pruning: bool, p4_prob: float):
+def build_search_agent(algorithm: str, use_afterstate: bool, eval_type: str, leaf_mode: str, use_pruning: bool, p4_prob: float, risk_beta: float):
     value_func_mean, value_func_risk = get_value_func(eval_type)
-    
-    # 【这里是控制 AI 胆量大小的关键参数】
-    # Beta = 2.0 表示一旦预测出未来会有分数跌幅，立刻给予 2 倍跌幅分数的极强惩罚，彻底绕开危险区
-    risk_beta = 0.2
     
     if algorithm == "greedy":
         return GreedyAgent(value_func=value_func_mean)
@@ -121,11 +151,11 @@ def build_search_agent(algorithm: str, use_afterstate: bool, eval_type: str, lea
 
 
 def search_game_worker(args):
-    game_seed, algorithm, use_afterstate, eval_type, leaf_mode, search_depth, max_game_steps, use_pruning, p4_prob = args
+    game_seed, algorithm, use_afterstate, eval_type, leaf_mode, search_depth, max_game_steps, use_pruning, p4_prob, risk_beta = args
     board.lookup.init()
     rng = random.Random(game_seed)
     random.seed(game_seed)
-    agent = build_search_agent(algorithm, use_afterstate, eval_type, leaf_mode, use_pruning, p4_prob)
+    agent = build_search_agent(algorithm, use_afterstate, eval_type, leaf_mode, use_pruning, p4_prob, risk_beta)
 
     b = board()
     popup_with_rng(b, rng, p4=p4_prob)
@@ -161,11 +191,11 @@ def search_game_worker(args):
     }
 
 
-def evaluate_config(config, exp_id, name, algorithm, use_afterstate, eval_type, leaf_mode, depth, use_pruning):
+def evaluate_config(config, exp_id, name, algorithm, use_afterstate, eval_type, leaf_mode, depth, use_pruning, risk_beta):
     p4_prob = getattr(config, 'p4_prob', 0.1) 
     seeds = [config.seed + i for i in range(config.search_games)]
     args_list = [
-        (seed, algorithm, use_afterstate, eval_type, leaf_mode, depth, config.max_game_steps, use_pruning, p4_prob)
+        (seed, algorithm, use_afterstate, eval_type, leaf_mode, depth, config.max_game_steps, use_pruning, p4_prob, risk_beta)
         for seed in seeds
     ]
     records = []
@@ -175,6 +205,12 @@ def evaluate_config(config, exp_id, name, algorithm, use_afterstate, eval_type, 
             records.append(future.result())
 
     summary = summarize_games(records)
+    
+    # 【核心：为你精准计算分数的标准差 (Standard Deviation)】
+    scores = [r["score"] for r in records]
+    avg_score = sum(scores) / max(1, len(scores))
+    score_std = math.sqrt(sum((s - avg_score) ** 2 for s in scores) / max(1, len(scores)))
+    
     summary.update(
         {
             "experiment": exp_id,
@@ -184,6 +220,8 @@ def evaluate_config(config, exp_id, name, algorithm, use_afterstate, eval_type, 
             "leaf_mode": leaf_mode,
             "use_afterstate": use_afterstate,
             "use_pruning": use_pruning,
+            "risk_beta": risk_beta,
+            "score_std": score_std,  # 记录方差/标准差
             "b_eff": safe_mean(r["b_eff"] for r in records),
             "compression_ratio": safe_mean(r["compression_ratio"] for r in records),
             "node_count": safe_mean(r["node_count"] for r in records),
@@ -194,25 +232,25 @@ def evaluate_config(config, exp_id, name, algorithm, use_afterstate, eval_type, 
 
 def run_experiment(config):
     rows, details = [], {"games": {}}
-    for exp_id, name, algorithm, use_afterstate, eval_type, leaf_mode, depth, use_pruning in SEARCH_CONFIGS:
+    for exp_id, name, algorithm, use_afterstate, eval_type, leaf_mode, depth, use_pruning, risk_beta in SEARCH_CONFIGS:
         summary, records = evaluate_config(
-            config, exp_id, name, algorithm, use_afterstate, eval_type, leaf_mode, depth, use_pruning
+            config, exp_id, name, algorithm, use_afterstate, eval_type, leaf_mode, depth, use_pruning, risk_beta
         )
         rows.append(summary)
         details["games"][exp_id] = records
+        # 终端打印加上了 std (标准差) 的输出
         print(
-            f"{exp_id} {name}: score={summary['average_score']:.1f}, "
-            f"time/step={summary['time_per_step_ms']:.2f}ms, "
-            f"comp_ratio={summary['compression_ratio']:.3f}"
+            f"[{exp_id}] {name}: score={summary['average_score']:.1f} (std: {summary['score_std']:.1f}), "
+            f"time/step={summary['time_per_step_ms']:.2f}ms"
         )
 
     paths = write_result_bundle(config.output_dir, "search", config, rows, details)
-    print(f"Search results saved: {paths['md']}")
+    print(f"\n✅ Search results & Variance Data saved: {paths['md']}")
     return paths
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run phase-3 Expectimax experiments.")
+    parser = argparse.ArgumentParser(description="Run phase-3 Expectimax experiments with RSZ Variance Analysis.")
     add_common_args_3(parser)
     args = parser.parse_args()
     config = config_from_args(args)

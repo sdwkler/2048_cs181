@@ -1,0 +1,240 @@
+{
+  "config": {
+    "mode": "smoke",
+    "seed": 181,
+    "workers": 1,
+    "output_dir": "models\\eval_results",
+    "search_games": 1,
+    "search_depth": 3,
+    "regret_boards": 1,
+    "planning_boards": 3,
+    "planning_rollouts": [
+      5,
+      10
+    ],
+    "planning_stability_runs": 3,
+    "planning_eval_games": 1,
+    "max_game_steps": 3,
+    "q_episodes": 8,
+    "q_eval_games": 1,
+    "q_bias_episode": 6,
+    "q_bias_samples": 2,
+    "q_td_window": 10
+  },
+  "summary": [
+    {
+      "experiment": "3-A",
+      "variant": "Q(s,a)+StateNTuple",
+      "target_mode": "q",
+      "feature_mode": "state",
+      "average_score": 0.0,
+      "average_steps": 3.0,
+      "time_per_step_ms": 0.6634666666666863,
+      "rate_1024": 0.0,
+      "rate_2048": 0.0,
+      "rate_4096": 0.0,
+      "td_error_rms_final": 2.004037427305562,
+      "td_error_rms_mean": 2.6298011249549638,
+      "td_error_rms_min": 2.004037427305562,
+      "td_error_rms_max": 3.348568422890264,
+      "bias_episode": 6,
+      "average_bias": -351.99874712000565,
+      "max_bias": -63.9987471200056,
+      "min_bias": -639.9987471200056,
+      "model_path": "models\\qlearning_runs\\20260615_161428\\qlearning_3a_q_state.pkl",
+      "train_seconds": 0.5974339
+    },
+    {
+      "experiment": "3-B",
+      "variant": "Q(s,a)+AfterstateNTuple",
+      "target_mode": "q",
+      "feature_mode": "afterstate",
+      "average_score": 4.0,
+      "average_steps": 3.0,
+      "time_per_step_ms": 0.4158666666667088,
+      "rate_1024": 0.0,
+      "rate_2048": 0.0,
+      "rate_4096": 0.0,
+      "td_error_rms_final": 4.400568187058231,
+      "td_error_rms_mean": 3.0407991523927613,
+      "td_error_rms_min": 2.2002392307646623,
+      "td_error_rms_max": 4.400568187058231,
+      "bias_episode": 6,
+      "average_bias": -1577.995002972899,
+      "max_bias": -680.0,
+      "min_bias": -2475.990005945798,
+      "model_path": "models\\qlearning_runs\\20260615_161428\\qlearning_3b_q_afterstate.pkl",
+      "train_seconds": 0.276552
+    },
+    {
+      "experiment": "3-C",
+      "variant": "V(s')+StateNTuple",
+      "target_mode": "v",
+      "feature_mode": "state",
+      "average_score": 4.0,
+      "average_steps": 3.0,
+      "time_per_step_ms": 0.39173333333334764,
+      "rate_1024": 0.0,
+      "rate_2048": 0.0,
+      "rate_4096": 0.0,
+      "td_error_rms_final": 7.416752488975627,
+      "td_error_rms_mean": 4.773622740295935,
+      "td_error_rms_min": 2.1710394297286806,
+      "td_error_rms_max": 7.416752488975627,
+      "bias_episode": 6,
+      "average_bias": -2053.989442663129,
+      "max_bias": -1415.99937241001,
+      "min_bias": -2691.9795129162476,
+      "model_path": "models\\qlearning_runs\\20260615_161428\\qlearning_3c_v_state.pkl",
+      "train_seconds": 0.287215
+    },
+    {
+      "experiment": "3-D",
+      "variant": "V(s')+AfterstateNTuple",
+      "target_mode": "v",
+      "feature_mode": "afterstate",
+      "average_score": 12.0,
+      "average_steps": 3.0,
+      "time_per_step_ms": 0.4175333333333124,
+      "rate_1024": 0.0,
+      "rate_2048": 0.0,
+      "rate_4096": 0.0,
+      "td_error_rms_final": 5.956392286147654,
+      "td_error_rms_mean": 5.197466520576078,
+      "td_error_rms_min": 4.742363853184439,
+      "td_error_rms_max": 5.956392286147654,
+      "bias_episode": 6,
+      "average_bias": -2261.939035066838,
+      "max_bias": -519.9383992742312,
+      "min_bias": -4003.9396708594454,
+      "model_path": "models\\qlearning_runs\\20260615_161428\\qlearning_3d_v_afterstate.pkl",
+      "train_seconds": 0.23255789999999998
+    }
+  ],
+  "details": {
+    "3-A": {
+      "td_windows": [
+        {
+          "episode": 4,
+          "td_error_rms": 2.536797524669065
+        },
+        {
+          "episode": 7,
+          "td_error_rms": 3.348568422890264
+        },
+        {
+          "episode": 8,
+          "td_error_rms": 2.004037427305562
+        }
+      ],
+      "bias": {
+        "samples": 2,
+        "average_bias": -351.99874712000565,
+        "max_bias": -63.9987471200056,
+        "min_bias": -639.9987471200056,
+        "episode": 6
+      },
+      "games": [
+        {
+          "score": 0.0,
+          "steps": 3.0,
+          "max_tile": 4.0,
+          "time_per_step_ms": 0.6634666666666863
+        }
+      ]
+    },
+    "3-B": {
+      "td_windows": [
+        {
+          "episode": 4,
+          "td_error_rms": 2.2002392307646623
+        },
+        {
+          "episode": 7,
+          "td_error_rms": 2.52159003935539
+        },
+        {
+          "episode": 8,
+          "td_error_rms": 4.400568187058231
+        }
+      ],
+      "bias": {
+        "samples": 2,
+        "average_bias": -1577.995002972899,
+        "max_bias": -680.0,
+        "min_bias": -2475.990005945798,
+        "episode": 6
+      },
+      "games": [
+        {
+          "score": 4.0,
+          "steps": 3.0,
+          "max_tile": 4.0,
+          "time_per_step_ms": 0.4158666666667088
+        }
+      ]
+    },
+    "3-C": {
+      "td_windows": [
+        {
+          "episode": 4,
+          "td_error_rms": 4.7330763021835
+        },
+        {
+          "episode": 7,
+          "td_error_rms": 2.1710394297286806
+        },
+        {
+          "episode": 8,
+          "td_error_rms": 7.416752488975627
+        }
+      ],
+      "bias": {
+        "samples": 2,
+        "average_bias": -2053.989442663129,
+        "max_bias": -1415.99937241001,
+        "min_bias": -2691.9795129162476,
+        "episode": 6
+      },
+      "games": [
+        {
+          "score": 4.0,
+          "steps": 3.0,
+          "max_tile": 4.0,
+          "time_per_step_ms": 0.39173333333334764
+        }
+      ]
+    },
+    "3-D": {
+      "td_windows": [
+        {
+          "episode": 4,
+          "td_error_rms": 4.893643422396141
+        },
+        {
+          "episode": 7,
+          "td_error_rms": 4.742363853184439
+        },
+        {
+          "episode": 8,
+          "td_error_rms": 5.956392286147654
+        }
+      ],
+      "bias": {
+        "samples": 2,
+        "average_bias": -2261.939035066838,
+        "max_bias": -519.9383992742312,
+        "min_bias": -4003.9396708594454,
+        "episode": 6
+      },
+      "games": [
+        {
+          "score": 12.0,
+          "steps": 3.0,
+          "max_tile": 8.0,
+          "time_per_step_ms": 0.4175333333333124
+        }
+      ]
+    }
+  }
+}

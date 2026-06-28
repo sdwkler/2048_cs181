@@ -77,7 +77,7 @@ def default_config(mode: str, seed: int, workers: int | None, output_dir: str) -
         seed=seed,
         workers=workers or cpu_workers,
         output_dir=output_dir,
-        search_games=100,
+        search_games=50,
         search_depth=3,
         regret_boards=500,
         planning_boards=10,
