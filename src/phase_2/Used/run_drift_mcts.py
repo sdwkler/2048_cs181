@@ -15,7 +15,7 @@ from src.common import (
     ACTION_NAMES, add_common_args, config_from_args, generate_pressure_boards,
     max_tile_value, popup_with_rng, progress, safe_mean, summarize_games, write_result_bundle
 )
-from src.phase_2.mcts3_node import MCTSAgent
+from src.phase_2.Used.mcts3_node import MCTSAgent
 
 DRIFT_PROBS = [0.1,0.15, 0.2,0.25, 0.3,0.35, 0.4,0.45, 0.5]
 SIMULATIONS = 1000

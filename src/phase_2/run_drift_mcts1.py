@@ -32,7 +32,7 @@ def drift_game_worker(args):
     rng = random.Random(game_seed)
     random.seed(game_seed)
     
-    agent = MCTSAgent(use_afterstate=use_afterstate, seed=game_seed + 1000, p4_prob=0.1)
+    agent = MCTSAgent(use_afterstate=use_afterstate, seed=game_seed + 1000, p4_prob=env_p4_prob)
     
     b = board()
     popup_with_rng(b, rng, p4=env_p4_prob) 

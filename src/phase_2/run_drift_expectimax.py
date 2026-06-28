@@ -34,7 +34,7 @@ MIDDLE_CONFIGS = [
 
 # 环境漂移梯度：10% 到 90%
 DRIFT_PROBS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-GAMES_PER_ENV = 10
+GAMES_PER_ENV = 50
 
 def build_ntuple(eval_type: str) -> learning:
     original_alloc = feature.alloc
@@ -69,7 +69,7 @@ def build_search_agent(use_afterstate: bool, eval_type: str, leaf_mode: str, p4_
         value_func=get_value_func(eval_type), 
         leaf_mode=leaf_mode,
         use_pruning=False, 
-        p4_prob=p4_prob  # 核心死锁：AI 主观信仰锁死为 0.1
+        p4_prob=p4_prob
     )
 
 def search_game_worker(args):
