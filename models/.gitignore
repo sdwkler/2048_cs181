@@ -1,4 +1,10 @@
-# 忽略当前文件夹下的所有文件
+# 忽略所有内容
 *
-# 除了这个 .gitignore 本身之外（这样文件夹才会被 Git 识别并保留）
+# .gitignore 自身
 !.gitignore
+# 需要追踪的目录（需先放行中间路径）
+!/phrase_1/
+!/phrase_1/eval_results/
+!/phrase_1/eval_results/**
+!/phrase_1/picture/
+!/phrase_1/picture/**
