@@ -3,8 +3,3 @@
 # .gitignore 自身
 !.gitignore
 # 需要追踪的目录（需先放行中间路径）
-!/phrase_1/
-!/phrase_1/eval_results/
-!/phrase_1/eval_results/**
-!/phrase_1/picture/
-!/phrase_1/picture/**
