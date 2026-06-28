@@ -18,8 +18,8 @@ from src.common import (
 from src.phase_2.mcts3_node1 import MCTSAgent
 
 DRIFT_PROBS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-SIMULATIONS = 500      
-MACRO_GAMES = 20
+SIMULATIONS = 1000
+MACRO_GAMES = 50
 
 MCTS_CONFIGS = [
     ("MCTS-State", "State MCTS", False),

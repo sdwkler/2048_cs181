@@ -29,6 +29,7 @@ MIDDLE_CONFIGS = [
     ("M3-State-NT", "State + StateNTuple", False, "ntuple_state", "state", 2),
     # ("M4-State-ANT", "State + AfterstateNTuple", False, "ntuple_afterstate", "state", 2),
     # ("M5-After-NT", "Afterstate + StateNTuple", True, "ntuple_state", "afterstate", 2),
+    # 错配本质上是不要的
     ("M6-After-ANT", "Afterstate + AfterstateNTuple", True, "ntuple_afterstate", "afterstate", 2)
 ]
 
