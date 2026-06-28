@@ -39,8 +39,9 @@ SEARCH_CONFIGS = [
     # 2-3. 人工启发式对照组
     ("1-B", "Standard+Heuristic", "expectimax", False, "heuristic", "state", 2, False),
     ("1-C", "Afterstate+Heuristic", "expectimax", True, "heuristic", "afterstate", 2, False),
+    # ("1-D", "Afterstate+Heuristic", "expectimax", True, "heuristic", "afterstate", 3, True),
     
-    # 4-7. 核心 2x2 交叉消融验证组 (极其纯净的控制变量法)
+    # # 4-7. 核心 2x2 交叉消融验证组 (极其纯净的控制变量法)
     ("1-D", "Standard+StateNTuple", "expectimax", False, "ntuple_state", "state", 2, False),
     ("1-E", "Standard+AfterstateNTuple", "expectimax", False, "ntuple_afterstate", "state", 2, False),
     ("1-F", "Afterstate+StateNTuple", "expectimax", True, "ntuple_state", "afterstate", 2, False),
