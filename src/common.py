@@ -112,6 +112,12 @@ def add_common_args_2(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--workers", type=int, default=None)
     parser.add_argument("--output-dir", default=os.path.join("models","phrase_2", "eval_results"))
 
+def add_common_args_3(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--mode", choices=["smoke", "full"], default="smoke")
+    parser.add_argument("--seed", type=int, default=181)
+    parser.add_argument("--workers", type=int, default=None)
+    parser.add_argument("--output-dir", default=os.path.join("models","phrase_3", "eval_results"))
+
 
 def config_from_args(args: argparse.Namespace) -> ExperimentConfig:
     return default_config(args.mode, args.seed, args.workers, args.output_dir)

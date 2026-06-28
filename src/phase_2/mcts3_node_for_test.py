@@ -101,7 +101,6 @@ class Node:
 
 
 class MCTSAgent:
-    # 【新增参数】：rsz_mode 用于开启基于论文 RSZ 思想的潜伏对手机制
     def __init__(self, use_afterstate: bool = False, rsz_mode: bool = False, exploration_c: float = 2000.0, seed: int | None = None, max_tree_depth: int = 64, rollout_limit: int = 5):
         self.use_afterstate = use_afterstate
         self.rsz_mode = rsz_mode  
@@ -119,27 +118,57 @@ class MCTSAgent:
 
     def _is_critical_afterstate(self, raw: int) -> bool:
         """
-        O(1) 启发式哨兵：判断当前 Afterstate 是否处于灾难边缘（等价于 RSZ 中的 tau > tau_th）
+        【重新设计：完美契合论文 Figure 1 的灾难判定】
+        精准定位灾难：
+        1. 最大牌离开了角落 (极其危险)
+        2. 最大牌虽然在角落，但它上下左右存在空位。这意味着随时可能刷出一个 2 把最大牌堵死！
         """
         b = board(raw)
-        
-        # 规则 1：窒息危机（空位极少，极容易暴毙）
-        empties = sum(1 for i in range(16) if b.at(i) == 0)
-        if empties <= 2:
-            return True
-
-        # 规则 2：根基动摇（最大牌被挤出角落）
         max_val, max_idx = -1, -1
+        
+        # 找最大牌
         for i in range(16):
             val = b.at(i)
             if val > max_val:
                 max_val = val
                 max_idx = i
                 
+        # 1. 致命灾难：最大牌离开角落
         if max_idx not in (0, 3, 12, 15):
             return True
-
+            
+        # 2. 隐性灾难：最大牌在角落，但它的紧邻位置是空的 (随时被封死)
+        neighbors = []
+        if max_idx % 4 > 0: neighbors.append(max_idx - 1) # 左
+        if max_idx % 4 < 3: neighbors.append(max_idx + 1) # 右
+        if max_idx // 4 > 0: neighbors.append(max_idx - 4) # 上
+        if max_idx // 4 < 3: neighbors.append(max_idx + 4) # 下
+        
+        for n in neighbors:
+            if b.at(n) == 0:
+                return True
+                
         return False
+
+    def _get_adversary_spawn(self, b_raw: int) -> int:
+        """
+        恶魔发牌：遍历所有空位，寻找启发式评分最低的最差发牌点
+        """
+        b = board(b_raw)
+        spaces = [i for i in range(16) if b.at(i) == 0]
+        worst_raw = b_raw
+        worst_score = float('inf')
+        
+        for pos in spaces:
+            for tile in (1, 2):
+                temp_b = board(b_raw)
+                temp_b.set(pos, tile)
+                score = self.evaluator.evaluate(temp_b.raw, is_afterstate=False)
+                if score < worst_score:
+                    worst_score = score
+                    worst_raw = temp_b.raw
+                    
+        return worst_raw
 
     def get_best_action(self, b: board, num_simulations: int = 100) -> tuple[int, float, float]:
         self._legal_actions_cache.clear()
@@ -245,47 +274,30 @@ class MCTSAgent:
             elif not self.use_afterstate and not node.is_evaluated:
                 node.is_evaluated = True
 
-            # 【RSZ 核心判定】：当前节点是否触发攻击
-            is_attacked = False
-            if self.rsz_mode:
-                is_attacked = self._is_critical_afterstate(current_raw)
+            # 【RSZ 核心逻辑】：判断灾难并执行适度攻击
+            is_attacked = self.rsz_mode and self._is_critical_afterstate(current_raw)
 
-            if not is_attacked:
-                # 太平盛世：纯随机环境生成（对应论文中的 QRS）
+            # 对应论文：即使是危险点，也只以 c_lambda 的概率攻击 (防止过度悲观)
+            # 这里设置 50% 概率触发恶魔，另外 50% 仍保持随机发牌
+            if is_attacked and self.rng.random() < 0.5:
+                # 潜伏的对手出击：寻找最差发牌点
+                spawned_raw = self._get_adversary_spawn(current_raw)
+            else:
+                # 太平盛世 (QRS)：正常随机发牌
                 self.dummy_board.raw = current_raw
                 self._spawn_in_place(self.dummy_board)
                 spawned_raw = self.dummy_board.raw
-            else:
-                # 灾难边缘：潜伏的对手出击！（对应论文中的 Adversarial Intervention）
-                b_temp = board(current_raw)
-                spaces = [i for i in range(16) if b_temp.at(i) == 0]
-                
-                worst_raw = current_raw
-                worst_score = float('inf')
-                
-                # 寻找最能破坏玩家分数的发牌方式
-                for pos in spaces:
-                    for tile in (1, 2):
-                        b_test = board(current_raw)
-                        b_test.set(pos, tile)
-                        # 用启发式快速打分，越低越好（极小化）
-                        score = self.evaluator.evaluate(b_test.raw, is_afterstate=False)
-                        if score < worst_score:
-                            worst_score = score
-                            worst_raw = b_test.raw
-                            
-                spawned_raw = worst_raw
 
             if spawned_raw not in node.children:
                 node.children[spawned_raw] = Node(is_chance=False)
                 
             value = self._simulate(node.children[spawned_raw], spawned_raw, depth + 1)
             
-            # 【RSZ 极小化回溯】：对应论文中的 Equation 7
-            if is_attacked:
-                # 受到致命攻击时，向下传递巨大的惩罚值，让 MCTS 迅速避开当前动作
-                value -= 100000.0
-
+            # 【完美融合 Minimax Backup】：
+            # 我们不再直接暴力扣 100000 分。
+            # 如果前面触发了恶魔，它本身返回的 value 就会极差！
+            # 这个极差的 value 会被累加到 value_sum 中。因为只有 50% 概率混入极差值，
+            # 这里的平均分会被“平滑而沉重”地拉低，使得上层 MCTS 自然避开这条路，完美保持分数的数学尺度。
             node.value_sum += value
             node.visit_count += 1
             return value

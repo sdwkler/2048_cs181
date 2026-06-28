@@ -131,11 +131,16 @@ def generate_plots(rows: list[dict], picture_dir: str):
     os.makedirs(picture_dir, exist_ok=True)
     
     # 包含了你所有的 6 个实验
-    models = ["M1-State-Heur", "M2-After-Heur", "M3-State-NT", "M4-State-ANT", "M5-After-NT", "M6-After-ANT"]
+    # models = ["M1-State-Heur", "M2-After-Heur", "M3-State-NT", "M4-State-ANT", "M5-After-NT", "M6-After-ANT"]
+    # colors = {
+    #     "M1-State-Heur": "gray", "M2-After-Heur": "orange", 
+    #     "M3-State-NT": "red", "M4-State-ANT": "brown", 
+    #     "M5-After-NT": "green", "M6-After-ANT": "purple"
+    # }
+    models = ["M1-State-Heur", "M2-After-Heur", "M3-State-NT", "M6-After-ANT"]
     colors = {
-        "M1-State-Heur": "gray", "M2-After-Heur": "orange", 
-        "M3-State-NT": "red", "M4-State-ANT": "brown", 
-        "M5-After-NT": "green", "M6-After-ANT": "purple"
+        "M1-State-Heur": "gray", "M2-After-Heur": "orange",
+        "M3-State-NT": "red", "M6-After-ANT": "purple"
     }
 
     # --- 1. 折线图 (Score, Time, Compression) ---
