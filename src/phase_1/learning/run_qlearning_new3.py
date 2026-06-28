@@ -55,6 +55,7 @@ class StepResult:
     td_error: float
     next_raw: int
     terminal: bool
+    td_error_m: float = 0.0  # variance-head TD error (only populated in mv mode)
 
 
 class SparseNTupleValue:
@@ -205,6 +206,17 @@ class QLearningAgent:
             return 0.0
         return max(self.action_value(state_raw, action) for action in actions)
 
+    def _pure_v_value(self, state_raw: int) -> float:
+        """Max_a (R_a + V(S'_a)) — 不含方差惩罚，用于 V-head 的 TD target 计算"""
+        best = -float("inf")
+        for action in range(4):
+            after_raw, reward = apply_action(state_raw, action)
+            if reward == -1:
+                continue
+            feat = self.feature_board(state_raw, action, after_raw)
+            best = max(best, reward + self.v_head.estimate(feat))
+        return best if best != -float("inf") else 0.0
+
     def choose_action(self, b: board, epsilon: float, rng: random.Random) -> tuple[int, bool]:
         actions = legal_actions(b)
         if not actions:
@@ -227,6 +239,7 @@ class QLearningAgent:
         next_raw = next_b.raw
 
         feat = self.feature_board(state_raw, action, after_raw)
+        td_error_m = 0.0
 
         if self.target_mode == "q":
             target = reward + self.gamma * self.best_action_value(next_raw)
@@ -241,7 +254,7 @@ class QLearningAgent:
             self.v_head.update(feat, td_error, self.gamma, td_lambda)
 
         elif self.target_mode == "mv":
-            next_v = self.best_action_value(next_raw)
+            next_v = self._pure_v_value(next_raw)
             current_v = self.v_head.estimate(feat)
             
             target_v = self.gamma * next_v
@@ -260,7 +273,7 @@ class QLearningAgent:
             
             td_error = td_error_v
 
-        return StepResult(reward, td_error, next_raw, False)
+        return StepResult(reward, td_error, next_raw, False, td_error_m)
 
     def save(self, path: str) -> None:
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -327,22 +340,28 @@ def rollout_return(agent: QLearningAgent, start_raw: int, seed: int, gamma: floa
 
 def collect_bias(agent: QLearningAgent, count: int, seed: int) -> dict:
     biases = []
-    norm_biases = [] 
+    norm_biases = []
+    realized_values = []
     for i in range(count):
         b = policy_decision_board(agent, seed + i)
         if not legal_actions(b):
             b = random_decision_board(seed + 100_000 + i)
         predicted = agent.best_action_value(b.raw)
         realized = rollout_return(agent, b.raw, seed + 10_000 + i, gamma=agent.gamma)
-        
+
         bias = predicted - realized
         biases.append(bias)
-        norm_biases.append(bias / (realized + 1.0)) 
-        
+        norm_biases.append(bias / (realized + 1.0))
+        realized_values.append(realized)
+
+    sum_biases = sum(biases)
+    sum_realized_plus_one = sum(realized_values) + len(realized_values)
+
     return {
         "samples": count,
         "average_bias": safe_mean(biases),
-        "average_norm_bias": safe_mean(norm_biases), 
+        "average_norm_bias": safe_mean(norm_biases),  # mean-of-ratios
+        "norm_bias_rom": sum_biases / sum_realized_plus_one if sum_realized_plus_one != 0 else 0.0,  # ratio-of-means
     }
 
 
@@ -351,11 +370,12 @@ def train_one(config, exp_id: str, variant: str, target_mode: str, feature_mode:
     rng = random.Random(config.seed + int(exp_id[-1], 36) * 1000)
     agent = QLearningAgent(target_mode=target_mode, feature_mode=feature_mode)
     td_errors = []
-    
-    metrics = {"episodes": [], "td_rms": [], "normalized_td_rms": [], "train_scores": [], "bias": [], "norm_bias": []}
+    td_errors_m = []  # variance-head TD errors (3-E only)
+
+    metrics = {"episodes": [], "td_rms": [], "normalized_td_rms": [], "train_scores": [], "bias": [], "norm_bias": [], "norm_bias_rom": [], "td_errors_m": []}
     window_scores = []
     td_lambda = getattr(config, 'q_td_lambda', 0.5)
-    bias_interval = min(100, config.q_episodes // 100) 
+    bias_interval = max(1, min(100, config.q_episodes // 100))
     
     # 【新增：双重退火参数设置】
     # ==========================================
@@ -405,6 +425,8 @@ def train_one(config, exp_id: str, variant: str, target_mode: str, feature_mode:
             
             score += step.reward
             td_errors.append(abs(step.td_error))
+            if target_mode == "mv":
+                td_errors_m.append(abs(step.td_error_m))
             b = board(step.next_raw)
             steps += 1
             
@@ -423,12 +445,18 @@ def train_one(config, exp_id: str, variant: str, target_mode: str, feature_mode:
             
             td_errors.clear()
             window_scores.clear()
-            
+
+            if target_mode == "mv":
+                if len(td_errors_m) >= config.q_td_window:
+                    m_rms = math.sqrt(safe_mean(err * err for err in td_errors_m))
+                    metrics["td_errors_m"].append((episode, m_rms))
+                td_errors_m.clear()
+
         if episode % bias_interval == 0:
-            # 评估 Bias 时，为了获取绝对准确的预测能力，强行关闭 epsilon 干扰 (评估环境默认只按最佳动作走)
-            bias_res = collect_bias(agent, 10, config.seed + 40_000 + episode)
+            bias_res = collect_bias(agent, 20, config.seed + 40_000 + episode)
             metrics["bias"].append((episode, bias_res["average_bias"]))
-            metrics["norm_bias"].append((episode, bias_res["average_norm_bias"])) 
+            metrics["norm_bias"].append((episode, bias_res["average_norm_bias"]))
+            metrics["norm_bias_rom"].append((episode, bias_res["norm_bias_rom"]))
 
     model_path = os.path.join(model_dir, f"qlearning_{exp_id.lower().replace('-', '')}.pkl")
     agent.save(model_path)
@@ -445,17 +473,29 @@ def train_one(config, exp_id: str, variant: str, target_mode: str, feature_mode:
     
     final_bias = collect_bias(agent, config.q_bias_samples, config.seed + 80_000)
 
+    n_td = len(metrics["td_rms"])
+    tail_n = max(1, n_td // 10) if n_td > 0 else 1
+    td_error_rms_final = safe_mean(metrics["td_rms"][-tail_n:]) if metrics["td_rms"] else 0.0
+    norm_td_rms_final = safe_mean(metrics["normalized_td_rms"][-tail_n:]) if metrics["normalized_td_rms"] else 0.0
+
+    td_m = metrics.get("td_errors_m", [])
+    td_error_m_rms_final = safe_mean([v for _, v in td_m[-tail_n:]]) if td_m else 0.0
+    td_error_m_rms_mean = safe_mean([v for _, v in td_m]) if td_m else 0.0
+
     row = {
         "experiment": exp_id,
         "variant": variant,
         "target_mode": target_mode,
         "feature_mode": feature_mode,
         **game_summary,
-        "td_error_rms_final": metrics["td_rms"][-1] if metrics["td_rms"] else 0.0,
+        "td_error_rms_final": td_error_rms_final,
         "td_error_rms_mean": safe_mean(metrics["td_rms"]),
-        "normalized_td_rms_final": metrics["normalized_td_rms"][-1] if metrics["normalized_td_rms"] else 0.0,
+        "normalized_td_rms_final": norm_td_rms_final,
         "average_bias": final_bias["average_bias"],
         "average_norm_bias": final_bias["average_norm_bias"],
+        "norm_bias_rom": final_bias["norm_bias_rom"],
+        "td_error_m_rms_final": td_error_m_rms_final,
+        "td_error_m_rms_mean": td_error_m_rms_mean,
         "model_path": model_path,
         "train_seconds": elapsed,
     }
@@ -478,8 +518,8 @@ def generate_plots(all_metrics, picture_dir):
     sample_scores_len = len(next(iter(all_metrics.values()))["train_scores"])
     sample_bias_len = len(next(iter(all_metrics.values()))["bias"])
     
-    SCORE_WINDOW = min(10, sample_scores_len // 10)
-    BIAS_WINDOW = min(10, sample_bias_len // 10)
+    SCORE_WINDOW = max(1, min(10, sample_scores_len // 10))
+    BIAS_WINDOW = max(1, min(10, sample_bias_len // 10))
     
     # 图 1: 学习曲线
     plt.figure(figsize=(10, 6))
@@ -532,7 +572,7 @@ def generate_plots(all_metrics, picture_dir):
     plt.savefig(os.path.join(picture_dir, "td_error_volatility_smoothed.png"), dpi=300)
     plt.close()
     
-    # 图 4: 相对 TD-Error (Normalized TD-Error)
+    # 图 3: 相对 TD-Error (Normalized TD-Error)
     plt.figure(figsize=(10, 6))
     for exp_id, metrics in all_metrics.items():
         if metrics["episodes"] and "normalized_td_rms" in metrics:
@@ -558,7 +598,7 @@ def generate_plots(all_metrics, picture_dir):
     plt.savefig(os.path.join(picture_dir, "normalized_td_error_smoothed.png"), dpi=300)
     plt.close()
     
-    # 图 3: 相对过估计偏差 (Normalized Bias)
+    # 图 4: 相对过估计偏差 (Normalized Bias)
     plt.figure(figsize=(10, 6))
     for exp_id, metrics in all_metrics.items():
         if "norm_bias" in metrics and metrics["norm_bias"]:
@@ -581,6 +621,58 @@ def generate_plots(all_metrics, picture_dir):
     plt.grid(True, linestyle="--", alpha=0.6)
     plt.tight_layout()
     plt.savefig(os.path.join(picture_dir, "normalized_overestimation_bias_smoothed.png"), dpi=300)
+    plt.close()
+
+    # 图 5: 3-E Variance-Head TD-Error (仅 mv 模式)
+    has_m_data = any(metrics.get("td_errors_m") for metrics in all_metrics.values())
+    if has_m_data:
+        plt.figure(figsize=(10, 6))
+        for exp_id, metrics in all_metrics.items():
+            if metrics.get("td_errors_m"):
+                episodes, m_rms_vals = zip(*metrics["td_errors_m"])
+
+                plt.plot(episodes, m_rms_vals, color=colors[exp_id], alpha=0.15, linewidth=1)
+
+                if len(m_rms_vals) >= SCORE_WINDOW:
+                    smoothed = smooth_curve(m_rms_vals, SCORE_WINDOW)
+                    sm_episodes = episodes[SCORE_WINDOW - 1:]
+                    plt.plot(sm_episodes, smoothed, label=exp_id, color=colors[exp_id], linewidth=2)
+                else:
+                    plt.plot(episodes, m_rms_vals, label=exp_id, color=colors[exp_id], linewidth=2)
+
+        plt.title("Variance-Head Convergence (M-Head TD-Error RMS, 3-E only)", fontsize=14)
+        plt.xlabel("Training Episodes", fontsize=12)
+        plt.ylabel("M-Head TD-Error (Log Scale)", fontsize=12)
+        plt.yscale("log")
+        plt.legend()
+        plt.grid(True, linestyle="--", alpha=0.6)
+        plt.tight_layout()
+        plt.savefig(os.path.join(picture_dir, "variance_head_td_error_smoothed.png"), dpi=300)
+        plt.close()
+
+    # 图 6: 归一化过估计偏差 (Ratio-of-Means)
+    plt.figure(figsize=(10, 6))
+    for exp_id, metrics in all_metrics.items():
+        if "norm_bias_rom" in metrics and metrics["norm_bias_rom"]:
+            episodes, rom_biases = zip(*metrics["norm_bias_rom"])
+
+            plt.plot(episodes, rom_biases, color=colors[exp_id], alpha=0.15, linewidth=1, marker='.', markersize=4)
+
+            if len(rom_biases) >= BIAS_WINDOW:
+                smoothed = smooth_curve(rom_biases, BIAS_WINDOW)
+                sm_episodes = episodes[BIAS_WINDOW - 1:]
+                plt.plot(sm_episodes, smoothed, label=exp_id, color=colors[exp_id], linewidth=2.5)
+            else:
+                plt.plot(episodes, rom_biases, label=exp_id, color=colors[exp_id], linewidth=2.5, marker='o')
+
+    plt.axhline(0, color='black', linestyle='--', linewidth=2, label='Zero Bias (Perfect Prediction)')
+    plt.title("Empirical Overestimation Bias (Ratio-of-Means: sum(bias)/sum(realized+1))", fontsize=14)
+    plt.xlabel("Training Episodes", fontsize=12)
+    plt.ylabel("Relative Prediction Bias (ROM)", fontsize=12)
+    plt.legend()
+    plt.grid(True, linestyle="--", alpha=0.6)
+    plt.tight_layout()
+    plt.savefig(os.path.join(picture_dir, "overestimation_bias_rom_smoothed.png"), dpi=300)
     plt.close()
 
 
@@ -613,7 +705,7 @@ def run_experiment_parallel(config):
                 exp_id = row["experiment"]
                 rows.append(row)
                 all_metrics[exp_id] = metrics
-                tqdm.write(f"\n✅ {exp_id} Finished! Score: {row['average_score']:.0f}, Norm_TD: {row['normalized_td_rms_final']:.4f}, Norm_Bias: {row['average_norm_bias']:.4f}")
+                tqdm.write(f"\n✅ {exp_id} Finished! Score: {row['average_score']:.0f}, Norm_TD: {row['normalized_td_rms_final']:.4f}, Norm_Bias(MoR): {row['average_norm_bias']:.4f}, Norm_Bias(RoM): {row['norm_bias_rom']:.4f}")
             except Exception as exc:
                 tqdm.write(f"\n❌ An experiment generated an exception: {exc}")
 
