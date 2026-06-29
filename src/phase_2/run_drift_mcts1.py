@@ -12,7 +12,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"
 
 from src.environments.base_env import board
 from src.common import (
-    ACTION_NAMES, add_common_args, config_from_args, generate_pressure_boards,
+    ACTION_NAMES, add_common_args_2, config_from_args, generate_pressure_boards,
     max_tile_value, popup_with_rng, progress, safe_mean, summarize_games, write_result_bundle
 )
 from src.phase_2.mcts3_node1 import MCTSAgent
@@ -27,12 +27,12 @@ MCTS_CONFIGS = [
 ]
 
 def drift_game_worker(args):
-    game_seed, use_afterstate, env_p4_prob = args
+    game_seed, use_afterstate, env_p4_prob, max_game_steps = args
     board.lookup.init()
     rng = random.Random(game_seed)
     random.seed(game_seed)
     
-    agent = MCTSAgent(use_afterstate=use_afterstate, seed=game_seed + 1000, p4_prob=env_p4_prob)
+    agent = MCTSAgent(use_afterstate=use_afterstate, seed=game_seed + 1000, p4_prob=0.1)
     
     b = board()
     popup_with_rng(b, rng, p4=env_p4_prob) 
@@ -42,6 +42,8 @@ def drift_game_worker(args):
     step_times, q_vars, entropies, depths = [], [], [], []
     
     while True:
+        if max_game_steps is not None and steps >= max_game_steps:
+            break
         start = time.perf_counter()
         
         # 完美对齐 MCTS 核心引擎的四元组返回！
@@ -174,7 +176,7 @@ def run_experiment(config):
         print(f"\n>>> Environment Drifting To: P(4) = {env_p4:.2f} <<<")
         for exp_id, name, use_after in MCTS_CONFIGS:
             
-            args_list = [(config.seed + int(env_p4*100) + i, use_after, env_p4) for i in range(MACRO_GAMES)]
+            args_list = [(config.seed + int(env_p4*100) + i, use_after, env_p4, config.max_game_steps) for i in range(MACRO_GAMES)]
             records = []
             with ProcessPoolExecutor(max_workers=config.workers) as executor:
                 futures = [executor.submit(drift_game_worker, args) for args in args_list]
@@ -207,7 +209,7 @@ def run_experiment(config):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    add_common_args(parser) 
+    add_common_args_2(parser)
     args = parser.parse_args()
     config = config_from_args(args)
     config = config.__class__(**{**config.__dict__, "output_dir": os.path.join("models", "phase2", "results")})

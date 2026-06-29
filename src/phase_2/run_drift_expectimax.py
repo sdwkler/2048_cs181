@@ -14,7 +14,7 @@ from src.environments.base_env import board
 from src.ntuple.feature_base import diff_pattern, feature, learning, pattern
 from src.ntuple.loader import fast_mmap_load
 from src.common import (
-    ACTION_NAMES, add_common_args, config_from_args, generate_pressure_boards,
+    ACTION_NAMES, add_common_args_2, apply_action, config_from_args, generate_pressure_boards,
     max_tile_value, popup_with_rng, progress, safe_mean, summarize_games, write_result_bundle
 )
 from src.evaluators import HeuristicEvaluator, NTupleEvaluator
@@ -74,7 +74,7 @@ def build_search_agent(use_afterstate: bool, eval_type: str, leaf_mode: str, p4_
     )
 
 def search_game_worker(args):
-    game_seed, use_afterstate, eval_type, leaf_mode, search_depth, p4_prob = args
+    game_seed, use_afterstate, eval_type, leaf_mode, search_depth, p4_prob, max_game_steps = args
     board.lookup.init()
     rng = random.Random(game_seed)
     random.seed(game_seed)
@@ -87,6 +87,8 @@ def search_game_worker(args):
     score, steps = 0, 0
     step_times, compressions = [], []
     while True:
+        if max_game_steps is not None and steps >= max_game_steps:
+            break
         start = time.perf_counter()
         action, comp_ratio, _, _ = agent.get_best_action(b, max_depth=search_depth)
         step_times.append(time.perf_counter() - start)
@@ -108,21 +110,32 @@ def search_game_worker(args):
         "compression_ratio": safe_mean(compressions),
     }
 
-def compute_regret_drift(p4_prob: float, num_boards: int, seed: int, workers: int):
+def compute_regret_drift(p4_prob: float, num_boards: int, seed: int):
     boards = generate_pressure_boards(num_boards, seed)
     agent_state = build_search_agent(False, "ntuple_state", "state", p4_prob)
     agent_after = build_search_agent(True, "ntuple_afterstate", "afterstate", p4_prob)
-    
+
     disagreements, regrets = 0, []
     for raw in boards:
         b = board(raw)
-        action_s, _, _, _ = agent_state.get_best_action(b, max_depth=3)
-        action_a, _, _, _ = agent_after.get_best_action(b, max_depth=3)
+        action_s, _, _, _ = agent_state.get_best_action(b, max_depth=2)
+        action_a, _, _, _ = agent_after.get_best_action(b, max_depth=2)
         if action_s != action_a:
             disagreements += 1
-            regrets.append(1.0)
-            
-    return {"disagreement_rate": disagreements / len(boards) if boards else 0}
+            # 在完全解耦 Afterstate NT 评估器视角下 1-D 选错动作的代价
+            after_raw_s, reward_s = apply_action(b.raw, action_s)
+            va_s = reward_s + agent_after.value_func(board(after_raw_s), True) if reward_s != -1 else 0.0
+
+            after_raw_a, reward_a = apply_action(b.raw, action_a)
+            va_a = reward_a + agent_after.value_func(board(after_raw_a), True) if reward_a != -1 else 0.0
+
+            regrets.append(va_a - va_s)  # 正值 = Afterstate 方案选得更好
+
+    return {
+        "disagreement_rate": disagreements / len(boards) if boards else 0,
+        "average_regret": safe_mean(regrets) if regrets else 0.0,
+        "max_regret": max(regrets) if regrets else 0.0,
+    }
 
 
 # ======================================================================
@@ -260,7 +273,7 @@ def run_experiment(config):
         print(f"\n>>> Simulating Environment: P(4) = {p4:.2f} <<<")
         for exp_id, name, use_after, eval_type, leaf_mode, depth in MIDDLE_CONFIGS:
             args_list = [
-                (config.seed + int(p4*100) + i, use_after, eval_type, leaf_mode, depth, p4)
+                (config.seed + int(p4*100) + i, use_after, eval_type, leaf_mode, depth, p4, config.max_game_steps)
                 for i in range(GAMES_PER_ENV)
             ]
             records = []
@@ -277,12 +290,14 @@ def run_experiment(config):
             rows.append(row)
             print(f"  [{exp_id}] Score: {summary['average_score']:.0f} | Time/step: {summary['time_per_step_ms']:.2f}ms | Comp_Ratio: {row['compression_ratio']:.3f}")
         
-        regret_stats = compute_regret_drift(p4, num_boards=100, seed=config.seed + int(p4*100), workers=config.workers)
-        print(f"  [Regret Analysis] Disagreement Rate: {regret_stats['disagreement_rate']:.1%}")
+        regret_stats = compute_regret_drift(p4, num_boards=100, seed=config.seed + int(p4*100))
+        print(f"  [Regret Analysis] Disagreement Rate: {regret_stats['disagreement_rate']:.1%}, Avg Regret: {regret_stats['average_regret']:.1f}, Max Regret: {regret_stats['max_regret']:.1f}")
         rows.append({
             "p4_prob": p4, "experiment": "M-Regret", "variant": "Disagreement Rate (State vs Afterstate)",
             "average_score": 0.0, "time_per_step_ms": 0.0, "compression_ratio": 0.0,
-            "disagreement_rate": regret_stats["disagreement_rate"]
+            "disagreement_rate": regret_stats["disagreement_rate"],
+            "average_regret": regret_stats["average_regret"],
+            "max_regret": regret_stats["max_regret"],
         })
 
     # 结果写入并立刻触发绘图
@@ -298,8 +313,7 @@ def run_experiment(config):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    # 注意这里使用 common.py 里的 add_common_args
-    add_common_args(parser) 
+    add_common_args_2(parser)
     args = parser.parse_args()
     config = config_from_args(args)
     
