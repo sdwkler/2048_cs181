@@ -137,22 +137,24 @@ def macro_game_worker(args):
         "avg_entropy": sum(entropies)/len(entropies) if entropies else 0,
         "avg_depth": sum(depths)/len(depths) if depths else 0
     }
-
-def run_macro_benchmark(num_games=10):
-    """【宏观基准测试】：在无环境偏移 (P(4)=0.1) 下对比全局树属性"""
+from src.common import add_common_args_3, config_from_args, write_result_bundle
+import argparse
+def run_macro_benchmark(config):
+    """【宏观基准测试】：在无环境偏移 (P(4)=0.1) 下对比全局树属性，并自动保存"""
     print("\n\n" + "="*60)
-    print(f"📊 启动宏观基准测试 (无环境偏移 P4=0.1, 每组 {num_games} 局)")
+    print(f"📊 启动宏观基准测试 (无环境偏移 P4=0.1, 共 {config.search_games} 局)")
     print("="*60)
     
     results_summary = {}
+    rows = [] # 用于写入 CSV 和 JSON
     
     for cfg in MCTS_CONFIGS:
         print(f"\n🚀 正在测试: {cfg['name']} ...")
         
         # 并行执行对局
-        args_list = [(cfg, 1000 + i) for i in range(num_games)]
+        args_list = [(cfg, config.seed + 1000 + i) for i in range(config.search_games)]
         records = []
-        with ProcessPoolExecutor(max_workers=min(8, os.cpu_count())) as executor:
+        with ProcessPoolExecutor(max_workers=config.workers) as executor:
             futures = [executor.submit(macro_game_worker, args) for args in args_list]
             for future in as_completed(futures):
                 records.append(future.result())
@@ -161,6 +163,19 @@ def run_macro_benchmark(num_games=10):
         avg_score = np.mean([r["score"] for r in records])
         avg_entropy = np.mean([r["avg_entropy"] for r in records])
         avg_depth = np.mean([r["avg_depth"] for r in records])
+        
+        # 构建用于保存的数据行
+        row = {
+            "experiment": cfg["name"],
+            "use_afterstate": cfg["use_afterstate"],
+            "eval_type": cfg["eval_type"],
+            "average_score": avg_score,
+            "tree_entropy": avg_entropy,
+            "tree_depth": avg_depth,
+            "simulations": SIMULATIONS,
+            "rollout_limit": ROLLOUT_LIMIT
+        }
+        rows.append(row)
         
         results_summary[cfg["name"]] = {
             "Score": avg_score,
@@ -171,17 +186,40 @@ def run_macro_benchmark(num_games=10):
         print(f"   [完成] 平均得分: {avg_score:.0f} | 树平均宽度(熵): {avg_entropy:.3f} | 树平均深度: {avg_depth:.2f}")
 
     print("\n\n🏆 最终宏观树形总结 🏆")
-    print(f"{'模型架构':<15} | {'平均宽度 (信息熵)':<20} | {'平均最大深度'}")
-    print("-" * 55)
+    print(f"{'模型架构':<15} | {'平均得分':<10} | {'平均宽度(熵)':<15} | {'平均最大深度'}")
+    print("-" * 65)
     for name, stats in results_summary.items():
-        print(f"{name:<15} | {stats['Tree Entropy (Width)']:<20.3f} | {stats['Tree Depth']:.2f} 层")
+        print(f"{name:<15} | {stats['Score']:<10.0f} | {stats['Tree Entropy (Width)']:<15.3f} | {stats['Tree Depth']:.2f} 层")
         
     print("\n💡 结论指标指引: 熵(Entropy)越低，证明 MCTS 没有浪费算力在低价值分支，树越'瘦'; Depth越大，证明搜索得越'深'。")
+    
+    # 【自动保存逻辑】
+    paths = write_result_bundle(config.output_dir, "mcts_topology_analysis", config, rows, {})
+    print(f"\n✅ 宏观测试数据已成功保存至:\n - Markdown: {paths['md']}\n - CSV: {paths['csv']}")
 
 if __name__ == "__main__":
-    # 1. 先跑微观探针，剖析单步决策
+    from src.environments.base_env import board  # 确保导入了 board
+    
+    # 【修复核心】：在主进程执行任何棋盘操作前，先初始化全局高速查找表！
+    board.lookup.init()
+    parser = argparse.ArgumentParser(description="Run MCTS Topology Analysis")
+    add_common_args_3(parser)
+    # 开放局数自定义，方便快速测试
+    parser.add_argument("--games", type=int, default=50, help="宏观测试对局数")
+    args = parser.parse_args()
+    
+    config = config_from_args(args)
+    
+    import dataclasses
+    # 强制覆盖默认的保存路径和对局数，保证文件存在专门的文件夹里
+    config = dataclasses.replace(
+        config, 
+        search_games=args.games,
+        output_dir=os.path.join("models", "phase_3", "results", "topology_tests")
+    )
+    
+    # 1. 先跑微观探针，剖析单步决策 (直接打印到控制台，供人为观察)
     run_micro_probe_test()
     
-    # 2. 再跑宏观比赛，拿全局统计学数据
-    # 注: 测试时可以把 num_games 调成 5 快速验证，想要严谨数据请调成 50。
-    run_macro_benchmark(num_games=10)
+    # 2. 再跑宏观比赛，拿全局统计学数据并保存到文件
+    run_macro_benchmark(config)

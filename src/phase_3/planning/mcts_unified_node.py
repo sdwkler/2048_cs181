@@ -5,7 +5,8 @@ import math
 import random
 from typing import Tuple, Dict, Any
 from src.environments.base_env import board
-
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 # 【内存核武】：进程级别的全局缓存，确保每个 Worker 进程只加载一次模型
 _PROCESS_MODEL_CACHE = {}
 
