@@ -19,7 +19,7 @@ from src.common import (
     summarize_games,
     write_result_bundle,
 )
-from src.phase_2.mcts3_node_for_test import MCTSAgent
+from src.phase_2.Used.mcts3_node_for_test import MCTSAgent
 
 # 动态生成实验 ID，保持干净直观
 def planning_experiment_id(use_afterstate: bool, rsz_mode: bool, rollout_index: int) -> str:
