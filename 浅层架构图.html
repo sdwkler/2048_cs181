@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2048 Afterstate 浅层架构全景图</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Georgia', 'Noto Serif SC', 'STSong', 'Songti SC', 'SimSun', serif;
+    background: #f5f1ec; color: #3b3733; padding: 40px 20px;
+    line-height: 1.6;
+  }
+  .container { max-width: 1300px; margin: 0 auto; }
+  h1 {
+    text-align: center; font-size: 2em; font-weight: 700; margin-bottom: 6px;
+    color: #2d2a26; letter-spacing: 0.02em;
+  }
+  .subtitle { text-align: center; color: #8c8279; margin-bottom: 44px; font-size: 1em; }
+  .section {
+    background: #fff; border-radius: 10px; padding: 30px; margin-bottom: 26px;
+    border: 1px solid #e4ddd4; box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  }
+  .section h2 {
+    font-size: 1.25em; font-weight: 700; margin-bottom: 20px; padding-bottom: 10px;
+    border-bottom: 1px solid #e4ddd4; display: flex; align-items: center; gap: 10px;
+    color: #4a423b;
+  }
+  .section h2 .icon { font-size: 1.1em; }
+  .mermaid { display: flex; justify-content: center; overflow-x: auto; padding: 6px 0; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 22px; }
+  @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+  .card {
+    background: #faf8f5; border-radius: 8px; padding: 22px;
+    border: 1px solid #e4ddd4;
+  }
+  .card h3 { margin-bottom: 12px; color: #4a423b; font-size: 1em; font-weight: 700; }
+  .card p { color: #5e554c; font-size: .9em; line-height: 1.7; }
+  .highlight { color: #8b6914; font-weight: 700; }
+  .good { color: #5c7a5c; font-weight: 600; }
+  .bad { color: #9b5c5c; font-weight: 600; }
+  .tag {
+    display: inline-block; padding: 1px 9px; border-radius: 16px; font-size: .8em;
+    font-weight: 600; margin-right: 6px;
+  }
+  .tag-green { background: #e3efe0; color: #4a704a; }
+  .tag-red { background: #f0e3e3; color: #8b5050; }
+  .tag-blue { background: #e0e7ef; color: #4a5f8b; }
+  .tag-yellow { background: #f0ebe0; color: #8b6f3a; }
+  table.data {
+    width: 100%; border-collapse: collapse; margin-top: 14px; font-size: .88em;
+  }
+  table.data th {
+    background: #f5f1ec; color: #5e554c; padding: 9px 12px; text-align: left;
+    border-bottom: 2px solid #e4ddd4; font-weight: 600;
+  }
+  table.data td {
+    padding: 9px 12px; border-bottom: 1px solid #f0ebe5; color: #4a423b;
+  }
+  table.data tr:hover td { background: #faf8f5; }
+  .callout {
+    border-left: 4px solid #c4a35a; padding: 15px 20px; margin-top: 20px;
+    background: #faf6ee; border-radius: 0 7px 7px 0; font-size: .9em;
+    color: #5e4a2a;
+  }
+  .muted { color: #8c8279; font-size: .88em; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>2048 Afterstate 浅层架构全景图</h1>
+<p class="subtitle">MDP 三节点模型 · Afterstate 双维度解耦 · 2×2 消融矩阵 · 三范式实验验证</p>
+
+<!-- ======== 图1: 项目三层框架总览 ======== -->
+<div class="section">
+  <h2><span class="icon">🗺️</span> 一、项目总览：三层递进研究框架</h2>
+  <div class="mermaid">
+graph LR
+    L1["<b>浅层 Phase 1</b>（本文）
+    ────────────
+    对抗「未来的固定噪声」
+    标准 2048 · P(4)=10%
+    ────────────
+    Expectimax · MCTS · TD
+    三组控制变量消融实验"]
+
+    L2["<b>中层 Phase 2</b>
+    ────────────
+    对抗「欺骗性突变」
+    P(4) 漂移 10%→90%
+    网络梯度谱分析"]
+
+    L3["<b>深层 Phase 3</b>
+    ────────────
+    对抗「视觉欺骗」
+    战争迷雾 POMDP
+    Belief-Afterstate"]
+
+    L1 -->|"导出: 分歧 31% · 过估计 +193k"| L2
+    L2 -->|"前提: 必须看到 S 才能算 S'"| L3
+
+    style L1 fill:#e3efe0,stroke:#8aaa8a,stroke-width:2px,color:#3a5a3a
+    style L2 fill:#f0ebe0,stroke:#b8a878,stroke-width:2px,color:#6e5a30
+    style L3 fill:#f0e3e3,stroke:#b88080,stroke-width:2px,color:#6e3a3a
+  </div>
+  <p class="muted" style="text-align:center;margin-top:14px">
+    核心命题：Afterstate 解耦机制如何在 <b>代数估值 · 拓扑坍缩 · 采样方差</b> 三个底层维度上提升 AI 的泛化与生存能力？
+  </p>
+</div>
+
+<!-- ======== 图2: MDP 流转对比 ======== -->
+<div class="section">
+  <h2><span class="icon">⚛️</span> 二、核心机制：传统 MDP vs Afterstate MDP</h2>
+  <div class="grid-2">
+    <div class="card" style="border-left: 3px solid #b88080;">
+      <h3>传统架构（不分离）</h3>
+      <div class="mermaid">
+graph TD
+    S0["State S<br/>滑动前盘面<br/>等待操作"]
+    A0["动作 a<br/>滑动合并<br/>+ 奖励 R"]
+    MIX["动作 + 随机糅合<br/>滑动后立即生成新方块<br/>确定性与随机性混在同一跳"]
+    SN0["S_next<br/>含随机噪声的<br/>下一轮盘面"]
+    EVAL0["评估对象<br/>被噪声污染的 State"]
+
+    S0 --> A0 --> MIX
+    MIX --> SN0
+    MIX --> EVAL0
+    SN0 -.->|循环| S0
+
+    style S0 fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px,color:#3a4f6a
+    style MIX fill:#f0e3e3,stroke:#b88080,stroke-width:2px,color:#6e3a3a
+    style SN0 fill:#f0e3e3,stroke:#b88080,stroke-width:1px,color:#6e3a3a
+    style EVAL0 fill:#f0e3e3,stroke:#b88080,stroke-width:1px,color:#6e3a3a
+    style A0 fill:#e0e7ef,stroke:#7a8faa,stroke-width:1px,color:#3a4f6a
+      </div>
+      <p style="margin-top:6px;font-size:.83em;color:#9b5c5c">
+        ❌ b_eff ≈ 12 &nbsp;|&nbsp; ❌ 评估含噪 → 方差大 &nbsp;|&nbsp; ❌ max 从含噪 Q 挑最大 → 过估计
+      </p>
+    </div>
+
+    <div class="card" style="border-left: 3px solid #8aaa8a;">
+      <h3>Afterstate 架构（分离）</h3>
+      <div class="mermaid">
+graph TD
+    S1["State S<br/>滑动前盘面<br/>等待操作"]
+    A1["动作 a<br/>确定性滑动<br/>+ 奖励 R"]
+    SP["Afterstate S'<br/>滑动后纯净盘面<br/>方块已合并<br/>新方块尚未生成<br/>★ 解耦的核心节点"]
+    ENV["环境随机<br/>P(2)=90% P(4)=10%<br/>在空位生成新方块"]
+    SN1["S_next<br/>下一轮盘面<br/>含随机噪声"]
+    EVAL1["评估对象<br/>纯净的 S'<br/>不含随机噪声"]
+
+    S1 --> A1 --> SP
+    SP --> EVAL1
+    SP --> ENV --> SN1
+    SN1 -.->|循环| S1
+
+    style S1 fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px,color:#3a4f6a
+    style SP fill:#e3efe0,stroke:#8aaa8a,stroke-width:3px,color:#2d4a2d
+    style EVAL1 fill:#e3efe0,stroke:#8aaa8a,stroke-width:2px,color:#3a5a3a
+    style A1 fill:#e0e7ef,stroke:#7a8faa,stroke-width:1px,color:#3a4f6a
+    style ENV fill:#f0ebe0,stroke:#b8a878,stroke-width:1px,color:#6e5a30
+    style SN1 fill:#f0e3e3,stroke:#b88080,stroke-width:1px,color:#6e3a3a
+      </div>
+      <p style="margin-top:6px;font-size:.83em;color:#5c7a5c">
+        ✅ b_eff ≈ 5.5 &nbsp;|&nbsp; ✅ 评估纯净 → 方差缩减 &nbsp;|&nbsp; ✅ max 从 R+V(S') 选 → 过估计压制
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ======== 图3: Afterstate 两个可分离维度 + 2×2 消融矩阵 ======== -->
+<div class="section">
+  <h2><span class="icon">🔬</span> 三、Afterstate 的两个可分离维度与 2×2 消融矩阵</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>维度一：树结构的 Afterstate</h3>
+      <p>控制搜索树是否在动作节点和随机落子之间<b>显式插入 S' 机会节点</b>。</p>
+      <p style="font-size:.85em;margin-top:8px">
+        <b>不分离：</b>每个动作 aᵢ 之后，环境立即在空位上随机生成新方块，产生 N 个不同的 S_next → 树在机会节点处爆炸式分岔。<br>
+        <b>分离：</b>动作 aᵢ 之后先抵达 S'（仅含合并结果），不同动作可能产生相同 S' → 搜索树坍缩为 DAG。
+      </p>
+      <p style="margin-top:8px"><span class="tag tag-green">回答</span> 树拓扑变瘦能带来多少收益？</p>
+    </div>
+    <div class="card">
+      <h3>维度二：评估对象的 Afterstate</h3>
+      <p>控制打分器的输入是<b>纯净的 S'</b> 还是<b>已含随机噪声的 S_next</b>。</p>
+      <p style="font-size:.85em;margin-top:8px">
+        <b>看 S_next：</b>叶子节点需模拟环境随机落子（对所有空位枚举 2 和 4 取期望），O(空位数×2)，噪声混入估值。<br>
+        <b>看 S'：</b>一次 O(1) 直接评估纯净盘面，杜绝评估噪声。
+      </p>
+      <p style="margin-top:8px"><span class="tag tag-green">回答</span> 看干净东西打分能带来多少收益？</p>
+    </div>
+  </div>
+
+  <div style="margin-top:22px">
+    <h3 style="color:#4a423b;margin-bottom:8px;font-size:1.05em">Expectimax 全部 8 组实验</h3>
+    <table class="data" style="font-size:.85em;margin-bottom:20px">
+      <tr><th>实验</th><th>树结构</th><th>评估器</th><th>评估对象</th><th>类别</th><th>得分</th><th>压缩率</th></tr>
+      <tr><td>1-A</td><td>Greedy（深度=1）</td><td>Heuristic</td><td>S'</td><td>绝对基线</td><td>4,779</td><td>0.997</td></tr>
+      <tr><td>1-B</td><td>Standard（不分离）</td><td>Heuristic</td><td>S_next</td><td>普通搜索</td><td>11,059</td><td>0.998</td></tr>
+      <tr><td>1-C</td><td>Afterstate（分离）</td><td>Heuristic</td><td>S'</td><td>架构解耦</td><td>12,071</td><td>0.507</td></tr>
+      <tr style="background:#e0e7ef"><td><b>1-D</b></td><td><b>Standard（不分离）</b></td><td><b>State N-Tuple</b></td><td><b>S_next（含噪）</b></td><td><b>2×2：全关</b></td><td>64,740</td><td>0.999</td></tr>
+      <tr style="background:#f0ebe0"><td><b>1-E</b></td><td><b>Standard（不分离）</b></td><td><b>Afterstate N-Tuple</b></td><td><b>S'（纯净）</b></td><td><b>2×2：仅评估开</b></td><td><span class="good">114,885</span></td><td>0.999</td></tr>
+      <tr style="background:#e0e7ef"><td><b>1-F</b></td><td><b>Afterstate（分离）</b></td><td><b>State N-Tuple</b></td><td><b>S_next（含噪）</b></td><td><b>2×2：仅树开</b></td><td>64,740</td><td><span class="good">0.549</span></td></tr>
+      <tr style="background:#e3efe0"><td><b>1-G</b></td><td><b>Afterstate（分离）</b></td><td><b>Afterstate N-Tuple</b></td><td><b>S'（纯净）</b></td><td><b>2×2：全开 ★</b></td><td><span class="good">114,885</span></td><td><span class="good">0.554</span></td></tr>
+      <tr><td>1-H</td><td>Afterstate（分离）</td><td>Afterstate N-Tuple + 剪枝</td><td>S'（纯净）</td><td>终极拓展</td><td>—</td><td>—</td></tr>
+    </table>
+
+    <h3 style="color:#4a423b;margin-bottom:14px;font-size:1.05em">2×2 消融矩阵：树结构 × 评估对象（1-D / 1-E / 1-F / 1-G）</h3>
+    <div class="mermaid">
+graph TB
+    subgraph MATRIX["  "]
+        direction LR
+        CELL_F["<b>1-F &nbsp; 仅树结构开启</b><br/>━━━━━━━━━━<br/>树结构：Afterstate ✅<br/>评估对象：S_next（含噪声）<br/>━━━━━━━━━━<br/>得分 64,740<br/>压缩率 0.549 ✅<br/>耗时 19.6ms"]
+        CELL_D["<b>1-D &nbsp; 全部关闭</b><br/>━━━━━━━━━━<br/>树结构：Standard ❌<br/>评估对象：S_next（含噪声）<br/>━━━━━━━━━━<br/>得分 64,740<br/>压缩率 0.999 ❌<br/>耗时 19.5ms"]
+        CELL_G["<b>1-G &nbsp; 完全解耦 ★</b><br/>━━━━━━━━━━<br/>树结构：Afterstate ✅<br/>评估对象：S'（纯净）<br/>━━━━━━━━━━<br/>得分 114,885<br/>压缩率 0.554 ✅<br/>耗时 1.8ms"]
+        CELL_E["<b>1-E &nbsp; 仅评估对象开启</b><br/>━━━━━━━━━━<br/>树结构：Standard ❌<br/>评估对象：S'（纯净）<br/>━━━━━━━━━━<br/>得分 114,885<br/>压缩率 0.999 ❌<br/>耗时 1.9ms"]
+    end
+
+    CELL_F -- "纯换树结构<br/>得分不变 · 压缩率 1→0.55" --> CELL_D
+    CELL_D -- "纯换评估对象<br/>得分 64,740 → 114,885 (+77%)" --> CELL_E
+    CELL_F -- "同时换两者<br/>分数取评估之长 + 效率取树结构之长" --> CELL_G
+
+    style CELL_D fill:#f0e3e3,stroke:#b88080,color:#6e3a3a
+    style CELL_E fill:#f0ebe0,stroke:#b8a878,color:#6e5a30
+    style CELL_F fill:#e0e7ef,stroke:#7a8faa,color:#3a4f6a
+    style CELL_G fill:#e3efe0,stroke:#8aaa8a,stroke-width:3px,color:#2d4a2d
+    style MATRIX fill:#f5f1ec,stroke:#d5cec4
+    </div>
+    <p class="muted" style="text-align:center;margin-top:10px">
+      ← 树结构维度 → &nbsp;&nbsp; ↑ 评估对象维度 ↑ &nbsp;&nbsp; | &nbsp;&nbsp;
+      <b>打分器决定得分，树结构决定效率——两者在 Expectimax 中表现为可加效应。</b><br>
+      1-E 与 1-G 得分完全相同（114,885），说明分数增益完全来自评估对象维度，与树结构无关。
+    </p>
+  </div>
+</div>
+
+<!-- ======== 图4: 理论维度 → 实验方法映射 ======== -->
+<div class="section">
+  <h2><span class="icon">🎯</span> 四、三个理论维度 → 三种实验方法的独立证伪映射</h2>
+  <div class="mermaid">
+graph TB
+    subgraph THEORY["三个理论维度"]
+        T1["拓扑折叠<br/>搜索树是否变瘦？"]
+        T2["方差缩减<br/>采样噪声是否降低？"]
+        T3["梯度稳定<br/>权重更新是否平滑？"]
+    end
+
+    subgraph METHOD["三种实验方法"]
+        M1["<b>Expectimax</b><br/>───────<br/>相信评估器<br/>冻结权重 · 穷举搜索<br/>→ 测「树长什么样」"]
+        M2["<b>MCTS</b><br/>───────<br/>不信评估器<br/>无模型 · 即时 Rollout<br/>→ 测「采样有多吵」"]
+        M3["<b>TD 学习</b><br/>───────<br/>自己成为评估器<br/>从零训练 · 每步更新<br/>→ 测「梯度往哪走」"]
+    end
+
+    T1 -->|"计数节点、计算 b_eff"| M1
+    T2 -->|"重复采样、统计估值分布"| M2
+    T3 -->|"追踪 TD 误差、测量收敛"| M3
+
+    style THEORY fill:#f5f1ec,stroke:#d5cec4
+    style T1 fill:#e3efe0,stroke:#8aaa8a,color:#3a5a3a
+    style T2 fill:#e0e7ef,stroke:#7a8faa,color:#3a4f6a
+    style T3 fill:#f0ebe0,stroke:#b8a878,color:#6e5a30
+    style M1 fill:#e3efe0,stroke:#8aaa8a,stroke-width:2px,color:#2d4a2d
+    style M2 fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px,color:#2d3f5a
+    style M3 fill:#f0ebe0,stroke:#b8a878,stroke-width:2px,color:#4a3a20
+  </div>
+  <p class="muted" style="text-align:center;margin-top:14px">
+    三种方法不是"都试试看哪个好"，而是 <b>同一命题在三个维度上的独立证伪测试</b>——
+    任何一个维度上的负面结果都会挑战理论完整性。
+  </p>
+</div>
+
+<!-- ======== 图5: 实验平台架构 ======== -->
+<div class="section">
+  <h2><span class="icon">🏗️</span> 五、实验平台架构（自底向上）</h2>
+  <div class="mermaid">
+graph BT
+    subgraph L5["第5层 · 实验编排（最上层）"]
+        E1["run_all_experiments.sh / collect_results.py<br/>一键运行 · 结果汇总"]
+    end
+    subgraph L4["第4层 · 三大范式实验（phase_1/）"]
+        P1["Expectimax 1-A ~ 1-H<br/>相信评估器 · 冻结权重<br/>穷举搜索树<br/>→ 测「树长什么样」"]
+        P2["MCTS 2-A ~ 2-H<br/>不信评估器 · 无预训练<br/>即时 Rollout 模拟<br/>→ 测「采样有多吵」"]
+        P3["TD Learning 3-A ~ 3-E<br/>自己成为评估器 · 从零训练<br/>每步在线更新权重<br/>→ 测「梯度往哪走」"]
+    end
+    subgraph L3["第3层 · 公共实验基础设施"]
+        C1["双模式验证 smoke / full<br/>共享种子 · 参数隔离"]
+        C2["对局模拟与通用指标<br/>得分 · 达标率 · 耗时"]
+        C3["高压残局生成<br/>空格≤3 · 拥挤盘面快照"]
+    end
+    subgraph L2["第2层 · 表征与评估（evaluators.py + ntuple/）"]
+        subgraph L2_NT["NTupleEvaluator（ntuple/）"]
+            N1["N-Tuple 网络<br/>4 pattern + 4 diff_pattern<br/>6格选点 · 8同构窗口<br/>绝对值保精度 · 差分负责泛化<br/>离线预训练 / 在线 TD(0) 更新"]
+        end
+        V1["HeuristicEvaluator<br/>空位数 · 单调性 · 平滑度 · 角落最大<br/>人工经验预设权重"]
+        V3["FastHeuristic<br/>与 Heuristic 同逻辑<br/>65536行查表 + 位运算 O(1)<br/>MCTS Rollout 专用"]
+    end
+    subgraph L1["第1层 · 棋盘引擎（base_env.py）（最底层）"]
+        B1["64-bit Bitboard<br/>16格×4bit 压缩为单整数<br/>65536行预计算查表<br/>旋转+镜像统一四向<br/>无分支 · 无循环 · 微秒级"]
+    end
+
+    L1 --> L2 --> L3 --> L4 --> L5
+
+    style L1 fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px,color:#3a4f6a
+    style L2 fill:#f5f1ec,stroke:#d5cec4,stroke-width:1px,color:#4a423b
+    style L2_NT fill:#e8e0f0,stroke:#9a8aaa,stroke-width:1px,color:#4a3a5a
+    style V1 fill:#f0ebe0,stroke:#b8a878,stroke-width:1px,color:#6e5a30
+    style V3 fill:#f0ebe0,stroke:#b8a878,stroke-width:1px,color:#6e5a30
+    style L3 fill:#e3efe0,stroke:#8aaa8a,stroke-width:1px,color:#3a5a3a
+    style L4 fill:#e3efe0,stroke:#8aaa8a,stroke-width:1px,color:#3a5a3a
+    style L5 fill:#e0e7ef,stroke:#7a8faa,stroke-width:1px,color:#3a4f6a
+  </div>
+</div>
+
+<!-- ======== 图6: 三大实验群全景 ======== -->
+<div class="section">
+  <h2><span class="icon">🧪</span> 六、Phase 1 三大实验群全景</h2>
+
+  <div class="grid-3">
+    <div class="card" style="border-top: 3px solid #8aaa8a;">
+      <h3>Expectimax（搜索）</h3>
+      <p class="muted" style="margin-bottom:10px">Depth=3 · 100局 · seed=181</p>
+      <table class="data" style="font-size:.82em">
+        <tr><th>实验</th><th>配置</th><th>得分</th></tr>
+        <tr><td>1-A</td><td>Greedy 基线</td><td>4,779</td></tr>
+        <tr><td>1-B</td><td>Std + Heuristic</td><td>11,059</td></tr>
+        <tr><td>1-C</td><td>AS + Heuristic</td><td>12,071</td></tr>
+        <tr style="background:#f5f1ec"><td>1-D</td><td>Std + StateNT</td><td>64,740</td></tr>
+        <tr style="background:#f5f1ec"><td>1-E</td><td>Std + AfterNT</td><td><span class="good">114,885</span></td></tr>
+        <tr style="background:#f5f1ec"><td>1-F</td><td>AS + StateNT</td><td>64,740</td></tr>
+        <tr style="background:#e3efe0"><td><b>1-G</b></td><td><b>AS + AfterNT</b></td><td><span class="good"><b>114,885</b></span></td></tr>
+        <tr><td>1-H</td><td>1-G + 剪枝</td><td>—</td></tr>
+      </table>
+      <p class="muted" style="margin-top:6px">📏 b_eff / 压缩率 / 决策遗憾值</p>
+    </div>
+
+    <div class="card" style="border-top: 3px solid #7a8faa;">
+      <h3>MCTS（规划）</h3>
+      <p class="muted" style="margin-bottom:10px">纯 Rollout · 无模型 · seed=181</p>
+      <table class="data" style="font-size:.82em">
+        <tr><th>实验</th><th>配置</th><th>得分</th></tr>
+        <tr><td>2-A</td><td>Std 200</td><td>27,967</td></tr>
+        <tr><td>2-E</td><td>AS 200</td><td>23,989</td></tr>
+        <tr><td>2-B</td><td>Std 500</td><td>37,598</td></tr>
+        <tr><td>2-F</td><td>AS 500</td><td>39,862</td></tr>
+        <tr><td>2-C</td><td>Std 1000</td><td>44,731</td></tr>
+        <tr><td>2-G</td><td>AS 1000</td><td>43,467</td></tr>
+        <tr style="background:#f0e3e3"><td><b>2-D</b></td><td><b>Std 2000</b></td><td><span class="bad"><b>68,580</b></span></td></tr>
+        <tr style="background:#f5f1ec"><td>2-H</td><td>AS 2000</td><td>41,580</td></tr>
+      </table>
+      <p class="muted" style="margin-top:6px">📏 根方差 / 策略熵</p>
+    </div>
+
+    <div class="card" style="border-top: 3px solid #b88080;">
+      <h3>TD 学习（在线学习）</h3>
+      <p class="muted" style="margin-bottom:10px">100k 局 · α=0.05 · TD(λ)=0.5</p>
+      <table class="data" style="font-size:.82em">
+        <tr><th>实验</th><th>目标</th><th>输入</th><th>得分</th></tr>
+        <tr><td>3-A</td><td>Q(s,a)</td><td>State</td><td>2,506</td></tr>
+        <tr style="background:#e3efe0"><td><b>3-B</b></td><td><b>Q(s,a)</b></td><td><b>AS</b></td><td><span class="good"><b>5,912</b></span></td></tr>
+        <tr><td>3-C</td><td>V(s')</td><td>State</td><td>2,645</td></tr>
+        <tr style="background:#f0e3e3"><td><b>3-D</b></td><td><b>V(s')</b></td><td><b>AS</b></td><td><span class="bad">5,212</span></td></tr>
+      </table>
+      <p class="muted" style="margin-top:6px">
+        📏 TD误差RMS / 过估计Bias<br>
+        <span class="bad">⚠ 3-D Bias +193,795</span>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ======== 图7: 实验结果关键数据 ======== -->
+<div class="section">
+  <h2><span class="icon">📊</span> 七、关键实验数据</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Expectimax：树拓扑压缩</h3>
+      <table class="data">
+        <tr><th>指标</th><th>Standard (1-D)</th><th>Afterstate (1-G)</th><th>变化</th></tr>
+        <tr><td>平均得分</td><td>64,740</td><td><span class="good">114,885</span></td><td><span class="good">+77%</span></td></tr>
+        <tr><td>b_eff</td><td>11.5</td><td><span class="good">5.5</span></td><td><span class="good">−52%</span></td></tr>
+        <tr><td>压缩率</td><td>0.999</td><td><span class="good">0.55</span></td><td><span class="good">−45%</span></td></tr>
+        <tr><td>步均耗时</td><td>19.5ms</td><td><span class="good">1.8ms</span></td><td><span class="good">10.7×</span></td></tr>
+        <tr><td>2048 达标率</td><td>92%</td><td><span class="good">97%</span></td><td>+5pp</td></tr>
+        <tr><td>决策分歧率</td><td colspan="2" style="text-align:center"><span class="bad">31.2%</span>（500高压残局）</td></tr>
+        <tr><td>平均遗憾值</td><td colspan="2" style="text-align:center"><span class="bad">268.0</span>（最大 17,310）</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>TD 学习：过估计偏差</h3>
+      <table class="data">
+        <tr><th>实验</th><th>得分</th><th>TD误差RMS</th><th>过估计Bias</th></tr>
+        <tr><td>3-A (Q+State)</td><td>2,506</td><td>45.6</td><td>−2,100</td></tr>
+        <tr style="background:#e3efe0"><td><b>3-B (Q+AS)</b></td><td><span class="good">5,912</span></td><td>568.9</td><td>+7,931</td></tr>
+        <tr><td>3-C (V+State)</td><td>2,645</td><td>71.0</td><td>−2,123</td></tr>
+        <tr style="background:#f0e3e3"><td><b>3-D (V+AS)</b></td><td>5,212</td><td><span class="bad">13,584</span></td><td><span class="bad">+193,795</span></td></tr>
+      </table>
+      <p style="margin-top:10px;font-size:.85em;color:#9b5c5c">
+        ⚠ 3-D 完全解耦的过估计偏差是 3-B（仅表征解耦）的 <b>24 倍</b>。<br>
+        完全解耦反而不如部分解耦——浅层研究最反直觉的结果。
+      </p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:22px">
+    <h3>跨实验：Afterstate 优势的条件性（精度梯度）</h3>
+    <div class="mermaid">
+graph LR
+    subgraph HIGH["评估精度：高"]
+        H1["预训练 N-Tuple<br/>得分 +77%<br/>耗时 −90%"]
+    end
+    subgraph MID["评估精度：中"]
+        M1["手工启发式<br/>得分 +9%<br/>耗时 −87%"]
+    end
+    subgraph LOW["评估精度：低"]
+        L1["纯 Rollout<br/>Afterstate 微弱<br/>高预算反转"]
+    end
+
+    HIGH -->|"增益衰减"| MID -->|"增益消失"| LOW
+
+    style HIGH fill:#e3efe0,stroke:#8aaa8a,stroke-width:2px,color:#3a5a3a
+    style MID fill:#f0ebe0,stroke:#b8a878,stroke-width:2px,color:#6e5a30
+    style LOW fill:#f0e3e3,stroke:#b88080,stroke-width:2px,color:#6e3a3a
+    </div>
+    <p style="text-align:center;color:#5e4a2a;margin-top:10px;font-size:.9em;font-weight:600">
+      Afterstate 是一种杠杆：它放大评估信号的精度，但不创造精度本身。
+    </p>
+  </div>
+</div>
+
+<!-- ======== 图8: 浅层发现三层信号 ======== -->
+<div class="section">
+  <h2><span class="icon">💡</span> 八、浅层发现：三层信号</h2>
+
+  <div class="grid-3">
+    <div class="card" style="border-left: 3px solid #8aaa8a;">
+      <h3>信号一</h3>
+      <p><b>两个维度可分离，但交互因方法而异</b></p>
+      <p style="font-size:.85em">
+        Expectimax 中，<span class="good">打分器决定得分（+77%）</span>，<span class="good">树结构决定效率（10.7×）</span>——两者可加。<br><br>
+        TD 学习中可加性消失：<span class="bad">3-D 完全解耦过估计 +193,795</span>，反而不如仅表征解耦的 3-B。
+      </p>
+    </div>
+    <div class="card" style="border-left: 3px solid #b8a878;">
+      <h3>信号二</h3>
+      <p><b>增益随评估精度单调衰减</b></p>
+      <p style="font-size:.85em">
+        N-Tuple → Heuristic → Rollout：增益从 <span class="good">+77%</span> → <span class="highlight">+9%</span> → <span class="bad">消失/反转</span>。<br><br>
+        MCTS 高预算 Standard 反超 Afterstate——方差缩减与探索多样性构成 trade-off。
+      </p>
+    </div>
+    <div class="card" style="border-left: 3px solid #7a8faa;">
+      <h3>信号三</h3>
+      <p><b>估值优势转化为决策优势</b></p>
+      <p style="font-size:.85em">
+        500 高压残局上，<span class="bad">决策分歧率 31.2%</span>，平均遗憾值 268.0。<br><br>
+        拥挤盘面上噪声确实导致不同动作选择——估值优势转化为行为优势。
+      </p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <b>阶段性结论：</b>Afterstate 的理论优势在经验上确实存在且效果显著——但它们有<b>明确的边界条件</b>（评估精度、解耦程度、算力预算）。TD 学习中的过估计爆炸和 MCTS 中的高预算反转，暴露了理论在从代数推导进入函数逼近和有限采样时的复杂性——这两个张力直接导出中层研究的两个方向。
+  </div>
+
+  <div class="mermaid" style="margin-top:22px">
+graph LR
+    S1["信号一<br/>2×2 矩阵<br/>+ 3-D 过估计"]
+    S2["信号二<br/>精度梯度<br/>+ MCTS 反转"]
+    S3["信号三<br/>决策分歧<br/>31.2%"]
+
+    M1["<b>中层方向一</b><br/>非平稳环境漂移测试<br/>P(4) 10%→90%<br/>鲁棒性解剖"]
+    M2["<b>中层方向二</b><br/>网络梯度谱分析<br/>雅可比条件数<br/>流形连续性"]
+
+    S1 --> M2
+    S2 --> M1
+    S3 --> M1
+
+    style S1 fill:#e3efe0,stroke:#8aaa8a,color:#3a5a3a
+    style S2 fill:#f0ebe0,stroke:#b8a878,color:#6e5a30
+    style S3 fill:#e0e7ef,stroke:#7a8faa,color:#3a4f6a
+    style M1 fill:#f0ebe0,stroke:#b8a878,stroke-width:2px,color:#4a3a20
+    style M2 fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px,color:#2d3f5a
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    themeCSS: `
+      .node rect, .node circle, .node ellipse, .node polygon, .node path {
+        rx: 6px !important; ry: 6px !important;
+        stroke-width: 1.5px !important;
+      }
+      .node text, .edgeLabel text, .label text {
+        font-family: 'Georgia', 'Noto Serif SC', 'STSong', 'Songti SC', serif !important;
+        font-size: 13px !important;
+      }
+      .edgeLabel text { font-size: 12px !important; }
+      .cluster rect {
+        rx: 6px !important; ry: 6px !important;
+        stroke: #d5cec4 !important;
+        stroke-width: 1px !important;
+      }
+      .edgePath .path { stroke: #b8a898 !important; stroke-width: 1.2px !important; }
+      .edgePath marker path { fill: #b8a898 !important; stroke: #b8a898 !important; }
+    `,
+    themeVariables: {
+      primaryColor: '#f5f1ec',
+      primaryTextColor: '#3b3733',
+      primaryBorderColor: '#d5cec4',
+      lineColor: '#c5beb4',
+      secondaryColor: '#faf8f5',
+      tertiaryColor: '#f5f1ec',
+      fontSize: '14px'
+    },
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }
+  });
+</script>
+</body>
+</html>

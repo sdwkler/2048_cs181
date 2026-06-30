@@ -41,9 +41,9 @@ SHAPES = (
 )
 
 EXPERIMENTS = [
-    ("3-A", "Q(s,a)+StateNTuple", "q", "state"),
-    ("3-B", "Q(s,a)+AfterstateNTuple", "q", "afterstate"),
-    ("3-C", "V(s')+StateNTuple", "v", "state"),
+    # ("3-A", "Q(s,a)+StateNTuple", "q", "state"),
+    # ("3-B", "Q(s,a)+AfterstateNTuple", "q", "afterstate"),
+    # ("3-C", "V(s')+StateNTuple", "v", "state"),
     ("3-D", "V(s')+AfterstateNTuple", "v", "afterstate"),
     ("3-E", "MV(s')+AfterstateNTuple", "mv", "afterstate"),
 ]
@@ -59,11 +59,14 @@ class StepResult:
 
 
 class SparseNTupleValue:
+    _MAX_INDEX_CACHE = 16384
+
     def __init__(self, alpha: float = 0.05):
         self.alpha = alpha
         self.weights: dict[tuple[int, int], float] = {}
         self.traces: dict[tuple[int, int], float] = {}
         self.isom = self._build_isom()
+        self._index_cache: dict[int, list[tuple[int, int]]] = {}
 
     def clear_traces(self) -> None:
         self.traces.clear()
@@ -86,6 +89,19 @@ class SparseNTupleValue:
             for shape in shape_isom:
                 yield (feature_id, self._pattern_index(shape, b))
 
+    def _cached_indices(self, b: board) -> list[tuple[int, int]]:
+        raw = b.raw
+        cached = self._index_cache.get(raw)
+        if cached is not None:
+            return cached
+        indices = list(self._indices(b))
+        if len(self._index_cache) >= self._MAX_INDEX_CACHE:
+            # 淘汰一半，避免全清导致的周期性卡顿
+            for k in list(self._index_cache.keys())[:self._MAX_INDEX_CACHE // 2]:
+                del self._index_cache[k]
+        self._index_cache[raw] = indices
+        return indices
+
     @staticmethod
     def _pattern_index(shape: tuple[int, ...], b: board) -> int:
         index = 0
@@ -94,10 +110,14 @@ class SparseNTupleValue:
         return index
 
     def estimate(self, b: board) -> float:
-        return sum(self.weights.get(index, 0.0) for index in self._indices(b))
+        w = self.weights
+        total = 0.0
+        for index in self._cached_indices(b):
+            total += w.get(index, 0.0)
+        return total
 
     def update(self, b: board, td_error: float, gamma: float = 1.0, td_lambda: float = 0.5) -> None:
-        indices = list(self._indices(b))
+        indices = self._cached_indices(b)
         if not indices:
             return
 
@@ -683,35 +703,47 @@ def run_experiment_parallel(config):
     os.makedirs(model_dir, exist_ok=True)
     os.makedirs(picture_dir, exist_ok=True)
 
+    # 分两阶段：先跑核心消融 3-A~3-D，再跑风险控制 3-E
+    CORE = EXPERIMENTS[:4]   # 3-A, 3-B, 3-C, 3-D
+    EXTRA = EXPERIMENTS[4:]  # 3-E
+
     rows = []
     all_metrics = {}
-    
-    num_experiments = len(EXPERIMENTS)
-    print(f"===========================================================")
-    print(f"Launching {num_experiments} experiments concurrently...")
-    print(f"Your CPU usage will spike. Please wait...")
-    print(f"===========================================================\n")
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers=num_experiments) as executor:
-        futures = []
-        for i, (exp_id, variant, target_mode, feature_mode) in enumerate(EXPERIMENTS):
-            futures.append(
-                executor.submit(train_one, config, exp_id, variant, target_mode, feature_mode, model_dir, i)
-            )
+    def _launch(experiments, label):
+        num_exps = len(experiments)
+        print(f"\n{'='*60}")
+        print(f"Phase: {label}  ({num_exps} experiment(s))")
+        print(f"{'='*60}\n")
+        with concurrent.futures.ProcessPoolExecutor(max_workers=num_exps) as executor:
+            futures = []
+            for i, (exp_id, variant, target_mode, feature_mode) in enumerate(experiments):
+                futures.append(
+                    executor.submit(train_one, config, exp_id, variant, target_mode, feature_mode, model_dir, i)
+                )
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    row, metrics = future.result()
+                    exp_id = row["experiment"]
+                    rows.append(row)
+                    all_metrics[exp_id] = metrics
+                    tqdm.write(f"\n✅ {exp_id} Finished! Score: {row['average_score']:.0f}, Norm_TD: {row['normalized_td_rms_final']:.4f}, Norm_Bias(MoR): {row['average_norm_bias']:.4f}, Norm_Bias(RoM): {row['norm_bias_rom']:.4f}")
+                except Exception as exc:
+                    tqdm.write(f"\n❌ An experiment generated an exception: {exc}")
 
-        for future in concurrent.futures.as_completed(futures):
-            try:
-                row, metrics = future.result()
-                exp_id = row["experiment"]
-                rows.append(row)
-                all_metrics[exp_id] = metrics
-                tqdm.write(f"\n✅ {exp_id} Finished! Score: {row['average_score']:.0f}, Norm_TD: {row['normalized_td_rms_final']:.4f}, Norm_Bias(MoR): {row['average_norm_bias']:.4f}, Norm_Bias(RoM): {row['norm_bias_rom']:.4f}")
-            except Exception as exc:
-                tqdm.write(f"\n❌ An experiment generated an exception: {exc}")
+    # 阶段 1: 核心消融实验
+    _launch(CORE, "Core Ablation (3-A ~ 3-D)")
+
+    # 阶段 2: MV 风险控制实验
+    if EXTRA:
+        print(f"\n{'─'*60}")
+        print(f"Core ablation complete. Starting MV risk-control experiment (3-E).")
+        print(f"{'─'*60}")
+        _launch(EXTRA, "MV Risk-Control (3-E)")
 
     print(f"\nAll experiments completed! Generating combined plots...")
     generate_plots(all_metrics, picture_dir)
-    
+
     rows = sorted(rows, key=lambda x: x["experiment"])
     paths = write_result_bundle(config.output_dir, "qlearning_parallel", config, rows, {})
     print(f"Q-learning results saved: {paths['md']}")
