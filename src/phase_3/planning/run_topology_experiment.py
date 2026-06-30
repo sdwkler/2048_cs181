@@ -9,7 +9,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
 from src.environments.base_env import board
-from src.phase_3.planning.mcts_unified_node import MCTSAgent
+from src.phase_3.planning.mcts_topology_node import MCTSAgent
 
 # 我们要测试的四种架构配置
 MCTS_CONFIGS = [

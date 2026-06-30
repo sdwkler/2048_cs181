@@ -1,0 +1,3168 @@
+{
+  "config": {
+    "mode": "full",
+    "seed": 181,
+    "workers": 31,
+    "output_dir": "models\\phrase_3\\eval_results",
+    "search_games": 50,
+    "search_depth": 3,
+    "regret_boards": 500,
+    "planning_boards": 10,
+    "planning_rollouts": [
+      200,
+      500
+    ],
+    "planning_stability_runs": 50,
+    "planning_eval_games": 20,
+    "max_game_steps": null,
+    "q_episodes": 25000,
+    "q_eval_games": 100,
+    "q_bias_episode": 90000,
+    "q_bias_samples": 100,
+    "q_td_window": 1000
+  },
+  "summary": [
+    {
+      "average_score": 20096.48,
+      "average_steps": 1109.12,
+      "time_per_step_ms": 46.05579827719031,
+      "rate_1024": 0.94,
+      "rate_2048": 0.36,
+      "rate_4096": 0.0,
+      "rate_8192": 0.0,
+      "rate_16384": 0.0,
+      "rate_32768": 0.0,
+      "experiment": "2-A1",
+      "variant": "Heuristic + Base",
+      "depth": 3,
+      "eval_type": "heuristic",
+      "use_beam_search": false,
+      "use_tt": false,
+      "b_eff": 20.83356927081633,
+      "compression_ratio": 0.20726458828274907,
+      "node_count": 10892.146887107701,
+      "tt_hit_rate": 0.0
+    },
+    {
+      "average_score": 13344.0,
+      "average_steps": 788.48,
+      "time_per_step_ms": 22.694757866544965,
+      "rate_1024": 0.68,
+      "rate_2048": 0.12,
+      "rate_4096": 0.0,
+      "rate_8192": 0.0,
+      "rate_16384": 0.0,
+      "rate_32768": 0.0,
+      "experiment": "2-A2",
+      "variant": "Heuristic + BeamSearch",
+      "depth": 3,
+      "eval_type": "heuristic",
+      "use_beam_search": true,
+      "use_tt": false,
+      "b_eff": 12.65601251438503,
+      "compression_ratio": 0.2576461190730349,
+      "node_count": 2380.9368579033394,
+      "tt_hit_rate": 0.0
+    },
+    {
+      "average_score": 20096.48,
+      "average_steps": 1109.12,
+      "time_per_step_ms": 32.44204331205288,
+      "rate_1024": 0.94,
+      "rate_2048": 0.36,
+      "rate_4096": 0.0,
+      "rate_8192": 0.0,
+      "rate_16384": 0.0,
+      "rate_32768": 0.0,
+      "experiment": "2-A3",
+      "variant": "Heuristic + HashDAG",
+      "depth": 3,
+      "eval_type": "heuristic",
+      "use_beam_search": false,
+      "use_tt": true,
+      "b_eff": 15.97339113653824,
+      "compression_ratio": 0.40328586209308676,
+      "node_count": 4586.571254971268,
+      "tt_hit_rate": 0.030674347689969118
+    },
+    {
+      "average_score": 144702.72,
+      "average_steps": 6049.1,
+      "time_per_step_ms": 314.0224106073052,
+      "rate_1024": 1.0,
+      "rate_2048": 1.0,
+      "rate_4096": 1.0,
+      "rate_8192": 0.84,
+      "rate_16384": 0.02,
+      "rate_32768": 0.0,
+      "experiment": "2-B1",
+      "variant": "NTuple + Base",
+      "depth": 3,
+      "eval_type": "ntuple_afterstate",
+      "use_beam_search": false,
+      "use_tt": false,
+      "b_eff": 18.158663116105387,
+      "compression_ratio": 0.24891791193775303,
+      "node_count": 6937.664580012821,
+      "tt_hit_rate": 0.0
+    },
+    {
+      "average_score": 130123.04,
+      "average_steps": 5528.84,
+      "time_per_step_ms": 171.95305119977297,
+      "rate_1024": 1.0,
+      "rate_2048": 1.0,
+      "rate_4096": 0.98,
+      "rate_8192": 0.76,
+      "rate_16384": 0.0,
+      "rate_32768": 0.0,
+      "experiment": "2-B2",
+      "variant": "NTuple + BeamSearch",
+      "depth": 3,
+      "eval_type": "ntuple_afterstate",
+      "use_beam_search": true,
+      "use_tt": false,
+      "b_eff": 10.958724178575876,
+      "compression_ratio": 0.2599371249467893,
+      "node_count": 1476.0652294747,
+      "tt_hit_rate": 0.0
+    },
+    {
+      "average_score": 144702.72,
+      "average_steps": 6049.1,
+      "time_per_step_ms": 148.23337196295765,
+      "rate_1024": 1.0,
+      "rate_2048": 1.0,
+      "rate_4096": 1.0,
+      "rate_8192": 0.84,
+      "rate_16384": 0.02,
+      "rate_32768": 0.0,
+      "experiment": "2-B3",
+      "variant": "NTuple + HashDAG",
+      "depth": 3,
+      "eval_type": "ntuple_afterstate",
+      "use_beam_search": false,
+      "use_tt": true,
+      "b_eff": 14.41099449568053,
+      "compression_ratio": 0.46258373514668255,
+      "node_count": 3307.328467400272,
+      "tt_hit_rate": 0.03014283164535162
+    }
+  ],
+  "details": {
+    "games": {
+      "2-A1": [
+        {
+          "score": 7076.0,
+          "steps": 485.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 64.84461049382706,
+          "compression_ratio": 0.17806675777816577,
+          "b_eff": 22.523797453559144,
+          "node_count": 13193.962962962964,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 10716.0,
+          "steps": 641.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 59.360634890965734,
+          "compression_ratio": 0.18107684083005057,
+          "b_eff": 21.8942157707377,
+          "node_count": 12161.0,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 12528.0,
+          "steps": 759.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 58.52580276315784,
+          "compression_ratio": 0.18297472309097218,
+          "b_eff": 21.995093092154615,
+          "node_count": 12120.842105263158,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 14396.0,
+          "steps": 838.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 57.75836555423116,
+          "compression_ratio": 0.17560249228055858,
+          "b_eff": 22.097230085065256,
+          "node_count": 12085.824791418356,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 15876.0,
+          "steps": 929.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 50.83898064516125,
+          "compression_ratio": 0.2192501350721229,
+          "b_eff": 20.312408280719016,
+          "node_count": 10287.568817204301,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 15316.0,
+          "steps": 883.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 55.28260158371045,
+          "compression_ratio": 0.1998859549796456,
+          "b_eff": 20.96901790195386,
+          "node_count": 11104.547511312217,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16396.0,
+          "steps": 974.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 50.68831199999996,
+          "compression_ratio": 0.2429509945463049,
+          "b_eff": 19.684336316624577,
+          "node_count": 10056.13435897436,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 15448.0,
+          "steps": 902.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 54.13777452934649,
+          "compression_ratio": 0.2067546027681898,
+          "b_eff": 21.064295274507224,
+          "node_count": 11407.062015503876,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 15892.0,
+          "steps": 929.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 52.36645860215068,
+          "compression_ratio": 0.20424368589722647,
+          "b_eff": 20.847407235845175,
+          "node_count": 10756.945161290323,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16236.0,
+          "steps": 964.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 50.89073264248694,
+          "compression_ratio": 0.21989717372632156,
+          "b_eff": 20.548600883054597,
+          "node_count": 10846.927461139896,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 17100.0,
+          "steps": 1007.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 50.35170049603172,
+          "compression_ratio": 0.21286148272386293,
+          "b_eff": 20.385966301691347,
+          "node_count": 10278.641865079366,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16276.0,
+          "steps": 960.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 51.38972778355888,
+          "compression_ratio": 0.2234983836864251,
+          "b_eff": 20.27749493224623,
+          "node_count": 10618.995837669094,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16132.0,
+          "steps": 944.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 53.34256888888883,
+          "compression_ratio": 0.19586646620858292,
+          "b_eff": 21.265711044327315,
+          "node_count": 11271.878306878307,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16312.0,
+          "steps": 953.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 52.09945597484277,
+          "compression_ratio": 0.20589681688120093,
+          "b_eff": 20.745667125548252,
+          "node_count": 10677.624737945493,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16000.0,
+          "steps": 929.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 53.93998387096782,
+          "compression_ratio": 0.1969007091837185,
+          "b_eff": 21.2076756287886,
+          "node_count": 11145.943010752688,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16172.0,
+          "steps": 952.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 52.61480986358873,
+          "compression_ratio": 0.22060067642281656,
+          "b_eff": 20.471001116252886,
+          "node_count": 10668.609653725078,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16316.0,
+          "steps": 959.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 53.95877843750001,
+          "compression_ratio": 0.20235316724555383,
+          "b_eff": 21.122873103794063,
+          "node_count": 11147.109375,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 14620.0,
+          "steps": 852.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 60.21637702227418,
+          "compression_ratio": 0.1783781910834338,
+          "b_eff": 22.205632854786234,
+          "node_count": 12648.805392731536,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16108.0,
+          "steps": 952.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 53.969085834207824,
+          "compression_ratio": 0.19356942668681637,
+          "b_eff": 21.21630555909893,
+          "node_count": 11217.26757607555,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16364.0,
+          "steps": 967.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 53.50025816115708,
+          "compression_ratio": 0.20391011808766973,
+          "b_eff": 21.23539763515093,
+          "node_count": 11628.726239669422,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16240.0,
+          "steps": 963.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 54.695099585062174,
+          "compression_ratio": 0.1968468276233969,
+          "b_eff": 21.2126161000778,
+          "node_count": 11240.24377593361,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16304.0,
+          "steps": 979.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 55.88844244897968,
+          "compression_ratio": 0.19683780474158918,
+          "b_eff": 21.281442016277637,
+          "node_count": 11327.30612244898,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 23732.0,
+          "steps": 1219.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 49.138840983606535,
+          "compression_ratio": 0.21353388610561577,
+          "b_eff": 20.32498459501137,
+          "node_count": 9986.10737704918,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 23296.0,
+          "steps": 1191.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 52.23208229865775,
+          "compression_ratio": 0.1994235390486302,
+          "b_eff": 21.098223631605627,
+          "node_count": 10980.063758389262,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 6976.0,
+          "steps": 472.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 56.212962790697674,
+          "compression_ratio": 0.16694132754919003,
+          "b_eff": 23.312617091076124,
+          "node_count": 14876.29598308668,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 27592.0,
+          "steps": 1438.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 46.144264489228526,
+          "compression_ratio": 0.2310850585927278,
+          "b_eff": 19.7455080372089,
+          "node_count": 9596.029881862405,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 27576.0,
+          "steps": 1460.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 45.49237138945917,
+          "compression_ratio": 0.23537012857911807,
+          "b_eff": 19.550086462504208,
+          "node_count": 9261.65503080082,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 27204.0,
+          "steps": 1420.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 47.36842294159041,
+          "compression_ratio": 0.20861139165429318,
+          "b_eff": 20.5928332291687,
+          "node_count": 10196.467980295567,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 32324.0,
+          "steps": 1661.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 40.90064290012043,
+          "compression_ratio": 0.2428912799709502,
+          "b_eff": 19.014858298236394,
+          "node_count": 8383.629963898917,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 31944.0,
+          "steps": 1628.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 43.33460313075515,
+          "compression_ratio": 0.22284221458508177,
+          "b_eff": 19.871530192982384,
+          "node_count": 9566.854511970534,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 30884.0,
+          "steps": 1567.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 45.50329036989788,
+          "compression_ratio": 0.22400873748369582,
+          "b_eff": 20.12574577733022,
+          "node_count": 9952.262755102041,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 6488.0,
+          "steps": 446.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 51.31630000000021,
+          "compression_ratio": 0.14863668615509382,
+          "b_eff": 24.036804036743977,
+          "node_count": 15686.604026845638,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 36208.0,
+          "steps": 1873.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 43.637006830309595,
+          "compression_ratio": 0.2204735651317379,
+          "b_eff": 20.11444570493941,
+          "node_count": 9947.666488794024,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 13012.0,
+          "steps": 796.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 38.15963701380191,
+          "compression_ratio": 0.2221550995748186,
+          "b_eff": 20.711985519998713,
+          "node_count": 11243.156838143037,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 15492.0,
+          "steps": 903.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 37.655011061947086,
+          "compression_ratio": 0.22541933630989933,
+          "b_eff": 20.290215615972212,
+          "node_count": 10348.627212389381,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 15292.0,
+          "steps": 895.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 40.99415781250022,
+          "compression_ratio": 0.19283110559460628,
+          "b_eff": 21.58686017244302,
+          "node_count": 11947.92857142857,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16268.0,
+          "steps": 955.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 36.40946014644339,
+          "compression_ratio": 0.20347534398899142,
+          "b_eff": 20.854600858508146,
+          "node_count": 10822.047071129708,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 26488.0,
+          "steps": 1354.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 39.835421033210295,
+          "compression_ratio": 0.19768347013030674,
+          "b_eff": 20.87987015179732,
+          "node_count": 10476.050184501844,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 15976.0,
+          "steps": 946.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 37.26373864836345,
+          "compression_ratio": 0.2063888858108441,
+          "b_eff": 20.797094796761062,
+          "node_count": 10831.448785638859,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16020.0,
+          "steps": 942.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 38.69702078472984,
+          "compression_ratio": 0.18945398489935714,
+          "b_eff": 21.704061139313612,
+          "node_count": 12118.322375397667,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16160.0,
+          "steps": 959.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 36.91399281250008,
+          "compression_ratio": 0.1927532900519219,
+          "b_eff": 21.588551841330897,
+          "node_count": 11958.007291666667,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16268.0,
+          "steps": 974.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 36.3320086153846,
+          "compression_ratio": 0.19629846759276715,
+          "b_eff": 21.269327772341146,
+          "node_count": 11437.410256410256,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 23052.0,
+          "steps": 1157.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 33.96353955094995,
+          "compression_ratio": 0.20668420289296022,
+          "b_eff": 20.760118832660634,
+          "node_count": 10740.857512953367,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 27772.0,
+          "steps": 1439.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 32.740470416666774,
+          "compression_ratio": 0.2161831914330181,
+          "b_eff": 20.056287978845724,
+          "node_count": 9531.413888888888,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 27412.0,
+          "steps": 1439.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 31.09187368055544,
+          "compression_ratio": 0.21945305761246808,
+          "b_eff": 20.160709697838968,
+          "node_count": 9896.096527777778,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 30772.0,
+          "steps": 1560.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 30.341820627802704,
+          "compression_ratio": 0.23341412845292894,
+          "b_eff": 19.919077070170594,
+          "node_count": 9967.264573991031,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 32284.0,
+          "steps": 1665.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 27.582995258103217,
+          "compression_ratio": 0.21787093880440403,
+          "b_eff": 19.903202534258366,
+          "node_count": 9376.33013205282,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 36180.0,
+          "steps": 1871.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 26.313296955128283,
+          "compression_ratio": 0.24247969090211505,
+          "b_eff": 19.07952049495185,
+          "node_count": 8678.651175213676,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 34080.0,
+          "steps": 1763.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 27.826364569160933,
+          "compression_ratio": 0.23287054302058385,
+          "b_eff": 19.530189422779088,
+          "node_count": 9037.020408163266,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 34248.0,
+          "steps": 1742.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 28.72775467584598,
+          "compression_ratio": 0.21577343066470392,
+          "b_eff": 20.234966871776358,
+          "node_count": 9871.106712564544,
+          "tt_hit_rate": 0.0
+        }
+      ],
+      "2-A2": [
+        {
+          "score": 3248.0,
+          "steps": 275.0,
+          "max_tile": 256.0,
+          "time_per_step_ms": 37.644328623188386,
+          "compression_ratio": 0.2287336695364419,
+          "b_eff": 13.830492157055838,
+          "node_count": 3096.949275362319,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 5576.0,
+          "steps": 402.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 31.960733250620418,
+          "compression_ratio": 0.24201164976592632,
+          "b_eff": 13.44027654396306,
+          "node_count": 2810.7320099255585,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 6860.0,
+          "steps": 463.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 29.040212715517193,
+          "compression_ratio": 0.2565168068705815,
+          "b_eff": 12.838718718084255,
+          "node_count": 2446.2456896551726,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 7316.0,
+          "steps": 512.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 27.956125925925928,
+          "compression_ratio": 0.2679009207615818,
+          "b_eff": 12.615396558951904,
+          "node_count": 2419.4424951267056,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 6816.0,
+          "steps": 478.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 29.420984133611668,
+          "compression_ratio": 0.242176956802677,
+          "b_eff": 12.921289923469423,
+          "node_count": 2610.384133611691,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 7164.0,
+          "steps": 494.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 27.903558989898965,
+          "compression_ratio": 0.2685506912360445,
+          "b_eff": 12.82708870226687,
+          "node_count": 2588.7151515151513,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 7432.0,
+          "steps": 520.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 27.468820153550883,
+          "compression_ratio": 0.25387283445261966,
+          "b_eff": 12.615540413029926,
+          "node_count": 2425.898272552783,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 6596.0,
+          "steps": 449.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 32.21553866666669,
+          "compression_ratio": 0.2350448101291611,
+          "b_eff": 13.442308962023127,
+          "node_count": 2740.3866666666668,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 7388.0,
+          "steps": 511.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 31.5651666015625,
+          "compression_ratio": 0.24075107033815238,
+          "b_eff": 13.348400023255211,
+          "node_count": 2769.568359375,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 9512.0,
+          "steps": 617.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 28.54191343042071,
+          "compression_ratio": 0.23328469379700315,
+          "b_eff": 12.959873686532909,
+          "node_count": 2529.145631067961,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 14968.0,
+          "steps": 870.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 23.568334787600435,
+          "compression_ratio": 0.29293048125219445,
+          "b_eff": 12.022449681004218,
+          "node_count": 2071.963260619977,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 11748.0,
+          "steps": 693.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 28.027186455331353,
+          "compression_ratio": 0.2542576843904892,
+          "b_eff": 13.106043645652257,
+          "node_count": 2603.1066282420747,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 14368.0,
+          "steps": 828.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 23.691795054282274,
+          "compression_ratio": 0.2795189788531726,
+          "b_eff": 11.712272551254072,
+          "node_count": 1914.5259348612788,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 14432.0,
+          "steps": 842.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 24.63244294187428,
+          "compression_ratio": 0.2600264898722954,
+          "b_eff": 12.594710545970631,
+          "node_count": 2286.0960854092527,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 12544.0,
+          "steps": 748.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 27.44574886515353,
+          "compression_ratio": 0.24381132243411902,
+          "b_eff": 12.9580483398678,
+          "node_count": 2517.750333778371,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 12944.0,
+          "steps": 783.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 25.827816836734712,
+          "compression_ratio": 0.2554446931756985,
+          "b_eff": 12.664804954319768,
+          "node_count": 2377.269132653061,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 12936.0,
+          "steps": 780.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 27.568141741357238,
+          "compression_ratio": 0.22984448371485328,
+          "b_eff": 13.129115319184606,
+          "node_count": 2565.359795134443,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 15796.0,
+          "steps": 915.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 24.741371179039326,
+          "compression_ratio": 0.2509591737608315,
+          "b_eff": 12.692568279759431,
+          "node_count": 2287.911572052402,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 13932.0,
+          "steps": 849.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 25.29052176470583,
+          "compression_ratio": 0.2609372487479833,
+          "b_eff": 12.75491369025792,
+          "node_count": 2410.954117647059,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 14560.0,
+          "steps": 850.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 24.873568390129282,
+          "compression_ratio": 0.21875541176581795,
+          "b_eff": 13.48022369579732,
+          "node_count": 2683.4712103407755,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 13772.0,
+          "steps": 796.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 26.650469134253452,
+          "compression_ratio": 0.2515691403608278,
+          "b_eff": 12.95772169678428,
+          "node_count": 2494.0627352572146,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 14396.0,
+          "steps": 842.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 25.605537010676134,
+          "compression_ratio": 0.26862442221749766,
+          "b_eff": 12.256977596491065,
+          "node_count": 2210.567022538553,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 3216.0,
+          "steps": 267.0,
+          "max_tile": 256.0,
+          "time_per_step_ms": 26.058114925373147,
+          "compression_ratio": 0.22039157652198246,
+          "b_eff": 14.197438528182255,
+          "node_count": 3251.6492537313434,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 21412.0,
+          "steps": 1059.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 22.21269066037733,
+          "compression_ratio": 0.2993952753944121,
+          "b_eff": 11.923961970791154,
+          "node_count": 2005.383962264151,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16288.0,
+          "steps": 978.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 22.628900715015316,
+          "compression_ratio": 0.280855744938125,
+          "b_eff": 12.106601763365337,
+          "node_count": 2144.585291113381,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16700.0,
+          "steps": 997.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 22.15547875751493,
+          "compression_ratio": 0.27576025499308504,
+          "b_eff": 12.13010443451246,
+          "node_count": 2192.0250501002006,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16200.0,
+          "steps": 964.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 23.915894507772016,
+          "compression_ratio": 0.2756628109477043,
+          "b_eff": 12.21676669230794,
+          "node_count": 2172.041450777202,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16260.0,
+          "steps": 962.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 23.01519844236764,
+          "compression_ratio": 0.2732799777068806,
+          "b_eff": 12.398054729153861,
+          "node_count": 2284.3073727933543,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16040.0,
+          "steps": 939.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 25.538364148936154,
+          "compression_ratio": 0.23123786637573787,
+          "b_eff": 12.757669011797233,
+          "node_count": 2341.067021276596,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 7712.0,
+          "steps": 521.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 24.767167241379287,
+          "compression_ratio": 0.24765862865067761,
+          "b_eff": 13.534614076443537,
+          "node_count": 2871.9080459770116,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 7132.0,
+          "steps": 494.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 20.992241616161675,
+          "compression_ratio": 0.24643768605263747,
+          "b_eff": 13.011940548343624,
+          "node_count": 2621.806060606061,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 7244.0,
+          "steps": 495.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 23.364179435483873,
+          "compression_ratio": 0.23375931691423793,
+          "b_eff": 13.191232377113241,
+          "node_count": 2601.2379032258063,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 23664.0,
+          "steps": 1227.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 20.950602768729592,
+          "compression_ratio": 0.26606434021370867,
+          "b_eff": 11.948415986561328,
+          "node_count": 1935.9478827361563,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 7200.0,
+          "steps": 495.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 19.166692943548423,
+          "compression_ratio": 0.23600399876229286,
+          "b_eff": 13.332903552923968,
+          "node_count": 2638.4455645161293,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 26284.0,
+          "steps": 1347.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 21.342315133531162,
+          "compression_ratio": 0.25248548440911606,
+          "b_eff": 12.447697074459604,
+          "node_count": 2171.408011869436,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16152.0,
+          "steps": 953.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 14.851098113207613,
+          "compression_ratio": 0.29903369363231685,
+          "b_eff": 11.599768837520768,
+          "node_count": 1902.4297693920334,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 6912.0,
+          "steps": 472.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 19.050434883720932,
+          "compression_ratio": 0.24834597323577953,
+          "b_eff": 13.199095362149208,
+          "node_count": 2719.353065539112,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16080.0,
+          "steps": 939.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 16.753107446808517,
+          "compression_ratio": 0.2749688548996782,
+          "b_eff": 12.343223133704683,
+          "node_count": 2247.046808510638,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 15624.0,
+          "steps": 913.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 17.13204409190371,
+          "compression_ratio": 0.2649391827907246,
+          "b_eff": 12.134922567982455,
+          "node_count": 2118.0371991247266,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 11840.0,
+          "steps": 710.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 20.89963488045004,
+          "compression_ratio": 0.2369335987654426,
+          "b_eff": 13.228307407276466,
+          "node_count": 2620.2362869198314,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 14208.0,
+          "steps": 827.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 16.17843780193236,
+          "compression_ratio": 0.25988175907497196,
+          "b_eff": 12.353027649485199,
+          "node_count": 2240.955314009662,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 30600.0,
+          "steps": 1552.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 19.13039259497749,
+          "compression_ratio": 0.27952736906319187,
+          "b_eff": 11.781944695069171,
+          "node_count": 1934.0251126851256,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 12456.0,
+          "steps": 753.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 12.612295623342199,
+          "compression_ratio": 0.27810103857184043,
+          "b_eff": 11.858602664603811,
+          "node_count": 1981.1472148541113,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 14576.0,
+          "steps": 852.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 13.787241266119617,
+          "compression_ratio": 0.2476704493415782,
+          "b_eff": 12.540490751046232,
+          "node_count": 2250.141852286049,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 12284.0,
+          "steps": 732.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 15.674309686221125,
+          "compression_ratio": 0.2133457609141706,
+          "b_eff": 13.461477672183198,
+          "node_count": 2668.529331514325,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16708.0,
+          "steps": 1018.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 12.874671442590735,
+          "compression_ratio": 0.27925349008882244,
+          "b_eff": 11.991906895710017,
+          "node_count": 2077.368989205103,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16572.0,
+          "steps": 1002.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 12.71412422731813,
+          "compression_ratio": 0.2814586481006399,
+          "b_eff": 12.085356883696003,
+          "node_count": 2099.77666999003,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 16132.0,
+          "steps": 976.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 11.949906448311221,
+          "compression_ratio": 0.2988904826243126,
+          "b_eff": 11.96200939269499,
+          "node_count": 2072.985670419652,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 23296.0,
+          "steps": 1195.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 12.108505351170653,
+          "compression_ratio": 0.28115183666794596,
+          "b_eff": 11.826873116389054,
+          "node_count": 1996.005016722408,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 24104.0,
+          "steps": 1268.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 11.273531520882617,
+          "compression_ratio": 0.26428721976376646,
+          "b_eff": 12.066982258808695,
+          "node_count": 2026.4862096138693,
+          "tt_hit_rate": 0.0
+        }
+      ],
+      "2-A3": [
+        {
+          "score": 7076.0,
+          "steps": 485.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 46.88531275720159,
+          "compression_ratio": 0.36920830756501444,
+          "b_eff": 17.040216095310303,
+          "node_count": 5401.125514403292,
+          "tt_hit_rate": 0.029947012287770827
+        },
+        {
+          "score": 10716.0,
+          "steps": 641.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 42.88956775700932,
+          "compression_ratio": 0.3736460514879182,
+          "b_eff": 16.558227634209867,
+          "node_count": 4992.04984423676,
+          "tt_hit_rate": 0.031205252277047516
+        },
+        {
+          "score": 12528.0,
+          "steps": 759.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 40.56546328947372,
+          "compression_ratio": 0.3747170584732942,
+          "b_eff": 16.66485224389163,
+          "node_count": 5042.656578947369,
+          "tt_hit_rate": 0.031121970288327194
+        },
+        {
+          "score": 14396.0,
+          "steps": 838.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 40.467199642431474,
+          "compression_ratio": 0.37131471780611636,
+          "b_eff": 16.797504515392255,
+          "node_count": 5077.84505363528,
+          "tt_hit_rate": 0.0308178235043654
+        },
+        {
+          "score": 15316.0,
+          "steps": 883.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 38.698732805429884,
+          "compression_ratio": 0.3984120927639585,
+          "b_eff": 16.025747697976392,
+          "node_count": 4614.2024886877825,
+          "tt_hit_rate": 0.03114042810179368
+        },
+        {
+          "score": 15448.0,
+          "steps": 902.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 37.60932591362139,
+          "compression_ratio": 0.4004788166976612,
+          "b_eff": 16.093832385782072,
+          "node_count": 4713.968992248062,
+          "tt_hit_rate": 0.030117130887497078
+        },
+        {
+          "score": 15876.0,
+          "steps": 929.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 37.043771397849525,
+          "compression_ratio": 0.41488099689248303,
+          "b_eff": 15.67386261057015,
+          "node_count": 4359.25376344086,
+          "tt_hit_rate": 0.030001400228412876
+        },
+        {
+          "score": 16396.0,
+          "steps": 974.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 36.327865333333364,
+          "compression_ratio": 0.4358936130099208,
+          "b_eff": 15.184497822941024,
+          "node_count": 4212.427692307692,
+          "tt_hit_rate": 0.03089293796107313
+        },
+        {
+          "score": 16132.0,
+          "steps": 944.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 37.604183174603165,
+          "compression_ratio": 0.3917731550798517,
+          "b_eff": 16.230222112372868,
+          "node_count": 4722.037037037037,
+          "tt_hit_rate": 0.031088445556374262
+        },
+        {
+          "score": 16172.0,
+          "steps": 952.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 37.10913525708282,
+          "compression_ratio": 0.41493847624148106,
+          "b_eff": 15.74373431665345,
+          "node_count": 4493.473242392445,
+          "tt_hit_rate": 0.030229278478725242
+        },
+        {
+          "score": 17100.0,
+          "steps": 1007.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 36.55996359126983,
+          "compression_ratio": 0.41146584506441863,
+          "b_eff": 15.723173029081488,
+          "node_count": 4381.773809523809,
+          "tt_hit_rate": 0.030689965005999416
+        },
+        {
+          "score": 15892.0,
+          "steps": 929.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 37.928557096774256,
+          "compression_ratio": 0.4003525657971926,
+          "b_eff": 15.9946416801374,
+          "node_count": 4557.98064516129,
+          "tt_hit_rate": 0.03068232238620291
+        },
+        {
+          "score": 16000.0,
+          "steps": 929.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 38.539995161290385,
+          "compression_ratio": 0.3931174298715702,
+          "b_eff": 16.238035777410715,
+          "node_count": 4699.8462365591395,
+          "tt_hit_rate": 0.03054421309443879
+        },
+        {
+          "score": 16236.0,
+          "steps": 964.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 37.22038891191704,
+          "compression_ratio": 0.4120509962762429,
+          "b_eff": 15.715824620257179,
+          "node_count": 4527.341968911917,
+          "tt_hit_rate": 0.03072883668771819
+        },
+        {
+          "score": 14620.0,
+          "steps": 852.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 42.20400679953111,
+          "compression_ratio": 0.37121532314298633,
+          "b_eff": 16.800657852547324,
+          "node_count": 5194.389214536928,
+          "tt_hit_rate": 0.030840900542580128
+        },
+        {
+          "score": 16276.0,
+          "steps": 960.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 37.547400728407936,
+          "compression_ratio": 0.41937480571321717,
+          "b_eff": 15.576265903740586,
+          "node_count": 4413.7918834547345,
+          "tt_hit_rate": 0.03084127016070151
+        },
+        {
+          "score": 16312.0,
+          "steps": 953.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 37.954929874213846,
+          "compression_ratio": 0.4037946518230969,
+          "b_eff": 15.934981366274803,
+          "node_count": 4546.042976939203,
+          "tt_hit_rate": 0.03076436472517424
+        },
+        {
+          "score": 16316.0,
+          "steps": 959.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 38.511068854166595,
+          "compression_ratio": 0.39715461739152386,
+          "b_eff": 16.158626107038817,
+          "node_count": 4695.63125,
+          "tt_hit_rate": 0.030693902072522858
+        },
+        {
+          "score": 16108.0,
+          "steps": 952.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 38.28861993704089,
+          "compression_ratio": 0.39177595991267444,
+          "b_eff": 16.18672625987893,
+          "node_count": 4665.462749213011,
+          "tt_hit_rate": 0.030683161925191396
+        },
+        {
+          "score": 16240.0,
+          "steps": 963.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 38.561095746887915,
+          "compression_ratio": 0.3930231969831429,
+          "b_eff": 16.227071920076764,
+          "node_count": 4750.5072614107885,
+          "tt_hit_rate": 0.030959925739856384
+        },
+        {
+          "score": 16364.0,
+          "steps": 967.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 38.61133316115696,
+          "compression_ratio": 0.3972148844671113,
+          "b_eff": 16.169785409715086,
+          "node_count": 4791.246900826446,
+          "tt_hit_rate": 0.03080666271326878
+        },
+        {
+          "score": 16304.0,
+          "steps": 979.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 40.31762908163266,
+          "compression_ratio": 0.39318046689209,
+          "b_eff": 16.294642433572033,
+          "node_count": 4771.873469387755,
+          "tt_hit_rate": 0.030347453579301492
+        },
+        {
+          "score": 23732.0,
+          "steps": 1219.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 35.376484672131205,
+          "compression_ratio": 0.412592583288675,
+          "b_eff": 15.739290830235166,
+          "node_count": 4341.60737704918,
+          "tt_hit_rate": 0.030144413753313348
+        },
+        {
+          "score": 23296.0,
+          "steps": 1191.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 37.31475654362416,
+          "compression_ratio": 0.3960524352529082,
+          "b_eff": 16.16967167683557,
+          "node_count": 4655.728187919463,
+          "tt_hit_rate": 0.030516380929718905
+        },
+        {
+          "score": 6976.0,
+          "steps": 472.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 34.532814587737704,
+          "compression_ratio": 0.35058823493074287,
+          "b_eff": 17.2978696120223,
+          "node_count": 5730.5010570824525,
+          "tt_hit_rate": 0.030907343613461227
+        },
+        {
+          "score": 27576.0,
+          "steps": 1460.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 32.0338422997946,
+          "compression_ratio": 0.4356098835042618,
+          "b_eff": 15.247970332303135,
+          "node_count": 4072.5667351129364,
+          "tt_hit_rate": 0.03051429795481044
+        },
+        {
+          "score": 27592.0,
+          "steps": 1438.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 33.78388776928417,
+          "compression_ratio": 0.4300574163445339,
+          "b_eff": 15.340218193516353,
+          "node_count": 4133.202223766504,
+          "tt_hit_rate": 0.03024587499005309
+        },
+        {
+          "score": 27204.0,
+          "steps": 1420.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 34.14020900774095,
+          "compression_ratio": 0.40729165814420426,
+          "b_eff": 15.916013893337679,
+          "node_count": 4447.102040816327,
+          "tt_hit_rate": 0.030549984695289984
+        },
+        {
+          "score": 32324.0,
+          "steps": 1661.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 30.16170962695543,
+          "compression_ratio": 0.44475452394234455,
+          "b_eff": 14.964709897060459,
+          "node_count": 3797.4356197352586,
+          "tt_hit_rate": 0.030002763241049835
+        },
+        {
+          "score": 6488.0,
+          "steps": 446.0,
+          "max_tile": 512.0,
+          "time_per_step_ms": 33.05756308724834,
+          "compression_ratio": 0.3325619317897659,
+          "b_eff": 17.73375640342035,
+          "node_count": 6014.398210290828,
+          "tt_hit_rate": 0.03134325882656906
+        },
+        {
+          "score": 30884.0,
+          "steps": 1567.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 33.01649062499991,
+          "compression_ratio": 0.4206697577361098,
+          "b_eff": 15.584926755115939,
+          "node_count": 4305.350127551021,
+          "tt_hit_rate": 0.030341779273704676
+        },
+        {
+          "score": 31944.0,
+          "steps": 1628.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 32.23763695518721,
+          "compression_ratio": 0.4239306520669239,
+          "b_eff": 15.410738937635818,
+          "node_count": 4152.7231430325355,
+          "tt_hit_rate": 0.030588063194853344
+        },
+        {
+          "score": 15492.0,
+          "steps": 903.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 25.591558849557533,
+          "compression_ratio": 0.4182469995451481,
+          "b_eff": 15.616495789613351,
+          "node_count": 4381.003318584071,
+          "tt_hit_rate": 0.030360975089160608
+        },
+        {
+          "score": 13012.0,
+          "steps": 796.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 25.424208531995113,
+          "compression_ratio": 0.4123429555716507,
+          "b_eff": 15.834592369782307,
+          "node_count": 4614.134253450439,
+          "tt_hit_rate": 0.03066388348205301
+        },
+        {
+          "score": 36208.0,
+          "steps": 1873.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 31.110409284952038,
+          "compression_ratio": 0.4187153472649925,
+          "b_eff": 15.528203619965584,
+          "node_count": 4266.120064034151,
+          "tt_hit_rate": 0.03091339779188016
+        },
+        {
+          "score": 15292.0,
+          "steps": 895.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 27.797198772321476,
+          "compression_ratio": 0.38803011454881864,
+          "b_eff": 16.381019394837004,
+          "node_count": 4932.330357142857,
+          "tt_hit_rate": 0.030751753009927735
+        },
+        {
+          "score": 15976.0,
+          "steps": 946.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 24.597113621964183,
+          "compression_ratio": 0.40301389734483944,
+          "b_eff": 15.930690124525134,
+          "node_count": 4562.814149947201,
+          "tt_hit_rate": 0.030987548143169265
+        },
+        {
+          "score": 16268.0,
+          "steps": 955.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 24.345792573221654,
+          "compression_ratio": 0.40030202008253996,
+          "b_eff": 15.98282546253863,
+          "node_count": 4580.172594142259,
+          "tt_hit_rate": 0.03102038158272325
+        },
+        {
+          "score": 26488.0,
+          "steps": 1354.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 27.32194029520301,
+          "compression_ratio": 0.3964185885426765,
+          "b_eff": 16.058231276292645,
+          "node_count": 4528.549815498155,
+          "tt_hit_rate": 0.030802510278976018
+        },
+        {
+          "score": 16020.0,
+          "steps": 942.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 26.46167730646868,
+          "compression_ratio": 0.38387669059271073,
+          "b_eff": 16.461626404459288,
+          "node_count": 4961.68610816543,
+          "tt_hit_rate": 0.030845019517701928
+        },
+        {
+          "score": 16268.0,
+          "steps": 974.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 24.41402287179489,
+          "compression_ratio": 0.3921266754992859,
+          "b_eff": 16.205653569783987,
+          "node_count": 4753.673846153846,
+          "tt_hit_rate": 0.03125316589119755
+        },
+        {
+          "score": 16160.0,
+          "steps": 959.0,
+          "max_tile": 1024.0,
+          "time_per_step_ms": 25.53883760416664,
+          "compression_ratio": 0.3866066223855279,
+          "b_eff": 16.40825472798102,
+          "node_count": 4918.310416666666,
+          "tt_hit_rate": 0.03049990243657748
+        },
+        {
+          "score": 23052.0,
+          "steps": 1157.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 23.438691278065647,
+          "compression_ratio": 0.4043978211724763,
+          "b_eff": 15.96340819293311,
+          "node_count": 4581.715025906736,
+          "tt_hit_rate": 0.03084451016015616
+        },
+        {
+          "score": 27772.0,
+          "steps": 1439.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 22.80972284722224,
+          "compression_ratio": 0.41668062793297045,
+          "b_eff": 15.557409940785513,
+          "node_count": 4182.978472222222,
+          "tt_hit_rate": 0.0305517185069976
+        },
+        {
+          "score": 27412.0,
+          "steps": 1439.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 21.60610909722243,
+          "compression_ratio": 0.41716348378949664,
+          "b_eff": 15.607574135702453,
+          "node_count": 4285.675694444444,
+          "tt_hit_rate": 0.030649414546255485
+        },
+        {
+          "score": 30772.0,
+          "steps": 1560.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 21.206633311979566,
+          "compression_ratio": 0.4286479483729479,
+          "b_eff": 15.407216646026155,
+          "node_count": 4250.181934657271,
+          "tt_hit_rate": 0.03032328911208464
+        },
+        {
+          "score": 32284.0,
+          "steps": 1665.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 19.622567767106904,
+          "compression_ratio": 0.4209508885053366,
+          "b_eff": 15.454169341129944,
+          "node_count": 4118.798919567827,
+          "tt_hit_rate": 0.030889928308583902
+        },
+        {
+          "score": 34080.0,
+          "steps": 1763.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 19.039015702947804,
+          "compression_ratio": 0.43343122399649914,
+          "b_eff": 15.262920206291513,
+          "node_count": 4011.3333333333335,
+          "tt_hit_rate": 0.0300125884812604
+        },
+        {
+          "score": 36180.0,
+          "steps": 1871.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 18.790679861111325,
+          "compression_ratio": 0.4447627181320535,
+          "b_eff": 14.92722246599552,
+          "node_count": 3839.153311965812,
+          "tt_hit_rate": 0.030999084549094717
+        },
+        {
+          "score": 34248.0,
+          "steps": 1742.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 19.885044578313245,
+          "compression_ratio": 0.4154853750209233,
+          "b_eff": 15.643746831955104,
+          "node_count": 4284.387837062536,
+          "tt_hit_rate": 0.03104949493348922
+        }
+      ],
+      "2-B1": [
+        {
+          "score": 59428.0,
+          "steps": 2738.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 378.8968485578682,
+          "compression_ratio": 0.23176001263159332,
+          "b_eff": 18.976923690177664,
+          "node_count": 7885.860533041256,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 60652.0,
+          "steps": 2842.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 367.1573585297223,
+          "compression_ratio": 0.23130570970954134,
+          "b_eff": 18.83433588232685,
+          "node_count": 7586.120998944777,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 69680.0,
+          "steps": 3143.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 369.89367067430084,
+          "compression_ratio": 0.20984527403495573,
+          "b_eff": 19.748025514039362,
+          "node_count": 8468.651717557252,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 79620.0,
+          "steps": 3649.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 321.77317030137124,
+          "compression_ratio": 0.24721521687275133,
+          "b_eff": 18.242386441630718,
+          "node_count": 7099.951232876712,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 80376.0,
+          "steps": 3709.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 319.4769043126689,
+          "compression_ratio": 0.23619602064101908,
+          "b_eff": 18.65233809996506,
+          "node_count": 7296.475471698113,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 73528.0,
+          "steps": 3416.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 350.5584704711739,
+          "compression_ratio": 0.2314045096319613,
+          "b_eff": 18.91034599420085,
+          "node_count": 7750.546385718467,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 83808.0,
+          "steps": 3923.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 336.71653014780856,
+          "compression_ratio": 0.23415182334406132,
+          "b_eff": 18.712786379178603,
+          "node_count": 7432.481651376147,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 147496.0,
+          "steps": 6017.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 288.0089086075114,
+          "compression_ratio": 0.2553772024392001,
+          "b_eff": 17.90337110929242,
+          "node_count": 6632.771684945164,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 129636.0,
+          "steps": 5401.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 335.1583372639781,
+          "compression_ratio": 0.23821254843392786,
+          "b_eff": 18.5539245759573,
+          "node_count": 7286.143095149944,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 133048.0,
+          "steps": 5609.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 325.8666424598941,
+          "compression_ratio": 0.2475880917696826,
+          "b_eff": 18.17103638104565,
+          "node_count": 6888.399108734403,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 128440.0,
+          "steps": 5310.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 346.5706969497268,
+          "compression_ratio": 0.2429062587465549,
+          "b_eff": 18.50636541857137,
+          "node_count": 7361.592732065525,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 153784.0,
+          "steps": 6335.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 294.1553446654027,
+          "compression_ratio": 0.2712733547615856,
+          "b_eff": 17.335791277107084,
+          "node_count": 6175.645517676768,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 176532.0,
+          "steps": 7408.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 257.67110016196443,
+          "compression_ratio": 0.2766482404693184,
+          "b_eff": 16.896617685375706,
+          "node_count": 5692.555000674854,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 142712.0,
+          "steps": 5747.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 337.4327035490605,
+          "compression_ratio": 0.23886859205149716,
+          "b_eff": 18.496090051391892,
+          "node_count": 7192.557933194154,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 135140.0,
+          "steps": 5708.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 351.9718597652821,
+          "compression_ratio": 0.24104895686872355,
+          "b_eff": 18.57455667913413,
+          "node_count": 7395.767384830969,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 147808.0,
+          "steps": 6020.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 339.43455097159887,
+          "compression_ratio": 0.25453943109606897,
+          "b_eff": 17.95323488591946,
+          "node_count": 6852.865803022753,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 156348.0,
+          "steps": 6473.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 316.31483637627406,
+          "compression_ratio": 0.25021900734700925,
+          "b_eff": 18.08667299012228,
+          "node_count": 6835.079085573061,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 166632.0,
+          "steps": 6913.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 301.4321240671116,
+          "compression_ratio": 0.26269102092816604,
+          "b_eff": 17.66294933482654,
+          "node_count": 6580.51475267573,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 153096.0,
+          "steps": 6289.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 333.730769554849,
+          "compression_ratio": 0.25224668233529773,
+          "b_eff": 18.050711979919274,
+          "node_count": 6853.787917329094,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 171540.0,
+          "steps": 7103.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 296.4727960304058,
+          "compression_ratio": 0.26326151215833443,
+          "b_eff": 17.58558661914956,
+          "node_count": 6351.143440315315,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 148504.0,
+          "steps": 6100.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 351.9522812817571,
+          "compression_ratio": 0.24658784262237532,
+          "b_eff": 18.167609441719375,
+          "node_count": 6832.485658088838,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 167504.0,
+          "steps": 6931.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 322.5242340161575,
+          "compression_ratio": 0.24874005604818636,
+          "b_eff": 18.213092653557574,
+          "node_count": 7043.221004039238,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 173360.0,
+          "steps": 7256.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 317.2555987735973,
+          "compression_ratio": 0.25373045242234793,
+          "b_eff": 17.977668753750084,
+          "node_count": 6800.533278214138,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 167160.0,
+          "steps": 6921.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 336.3307715111247,
+          "compression_ratio": 0.24410261543890396,
+          "b_eff": 18.337630419058716,
+          "node_count": 7102.442791100838,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 168220.0,
+          "steps": 6982.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 337.37205656594557,
+          "compression_ratio": 0.251674020102752,
+          "b_eff": 17.953699640328487,
+          "node_count": 6707.171845911499,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 170936.0,
+          "steps": 7077.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 333.5178207685787,
+          "compression_ratio": 0.2544131825830207,
+          "b_eff": 17.979680170075564,
+          "node_count": 6811.225911274371,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 157152.0,
+          "steps": 6514.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 363.1828980967019,
+          "compression_ratio": 0.23524971011144946,
+          "b_eff": 18.704697759791753,
+          "node_count": 7440.664927091328,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 165884.0,
+          "steps": 6954.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 343.944609575844,
+          "compression_ratio": 0.2489010794250543,
+          "b_eff": 18.172433901626672,
+          "node_count": 6948.273040977714,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 176772.0,
+          "steps": 7419.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 333.10521385444804,
+          "compression_ratio": 0.25301635187301985,
+          "b_eff": 17.938397072219715,
+          "node_count": 6667.125606469002,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 173592.0,
+          "steps": 7284.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 360.74296650652224,
+          "compression_ratio": 0.2487127546403541,
+          "b_eff": 18.137612489551955,
+          "node_count": 6872.925051475635,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 172532.0,
+          "steps": 7133.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 373.4384544855621,
+          "compression_ratio": 0.24634074021043423,
+          "b_eff": 18.208684281354543,
+          "node_count": 6936.036585365854,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 130032.0,
+          "steps": 5399.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 313.36829988888786,
+          "compression_ratio": 0.2578189327397637,
+          "b_eff": 17.947009426509727,
+          "node_count": 6830.738703703703,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 132692.0,
+          "steps": 5551.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 327.00625198126846,
+          "compression_ratio": 0.2360628709373606,
+          "b_eff": 18.62615005781013,
+          "node_count": 7376.097982708934,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 146320.0,
+          "steps": 5935.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 311.1415475404332,
+          "compression_ratio": 0.2561102451064089,
+          "b_eff": 17.825259193515297,
+          "node_count": 6549.776785714285,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 177180.0,
+          "steps": 7447.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 281.2994862513425,
+          "compression_ratio": 0.25976528973524055,
+          "b_eff": 17.75137076132306,
+          "node_count": 6592.4117883995705,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 178628.0,
+          "steps": 7519.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 270.011843058511,
+          "compression_ratio": 0.27716620588931495,
+          "b_eff": 16.94821024418001,
+          "node_count": 5782.419015957446,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 89040.0,
+          "steps": 4143.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 301.5901372345541,
+          "compression_ratio": 0.2567523729485917,
+          "b_eff": 17.939693833565464,
+          "node_count": 6775.681225868726,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 156552.0,
+          "steps": 6460.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 315.266313744003,
+          "compression_ratio": 0.24454425542127387,
+          "b_eff": 18.28518043997327,
+          "node_count": 7009.723572202445,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 176960.0,
+          "steps": 7435.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 291.6856699166236,
+          "compression_ratio": 0.2646462825438534,
+          "b_eff": 17.526365588940433,
+          "node_count": 6338.5192307692305,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 117816.0,
+          "steps": 4922.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 295.2340879545,
+          "compression_ratio": 0.22863604721970002,
+          "b_eff": 19.016025532592202,
+          "node_count": 7760.658135283364,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 131132.0,
+          "steps": 5444.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 291.50699704316185,
+          "compression_ratio": 0.23298921711168372,
+          "b_eff": 18.830380585247273,
+          "node_count": 7553.949311294766,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 134080.0,
+          "steps": 5699.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 303.85572178947314,
+          "compression_ratio": 0.23620559474851957,
+          "b_eff": 18.677163467960312,
+          "node_count": 7453.112631578947,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 175024.0,
+          "steps": 7308.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 250.21874233137365,
+          "compression_ratio": 0.25834487497122544,
+          "b_eff": 17.782055219814726,
+          "node_count": 6607.2982624162,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 153336.0,
+          "steps": 6329.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 272.25483417061747,
+          "compression_ratio": 0.2470304914174874,
+          "b_eff": 18.18324184347991,
+          "node_count": 6865.142812006319,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 133508.0,
+          "steps": 5605.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 271.0871094006429,
+          "compression_ratio": 0.24294928967859075,
+          "b_eff": 18.341563155411563,
+          "node_count": 7081.6373528362465,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 156284.0,
+          "steps": 6472.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 278.50550108141533,
+          "compression_ratio": 0.2536133743248824,
+          "b_eff": 17.95939309653947,
+          "node_count": 6761.942067047737,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 167548.0,
+          "steps": 6938.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 239.03395581495553,
+          "compression_ratio": 0.27517406883479284,
+          "b_eff": 17.125605455778366,
+          "node_count": 5923.606571552097,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 168156.0,
+          "steps": 6961.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 270.1325272191917,
+          "compression_ratio": 0.2494630047294722,
+          "b_eff": 18.11987793069527,
+          "node_count": 6847.304366561333,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 170976.0,
+          "steps": 7060.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 260.1512970259133,
+          "compression_ratio": 0.24624072699382096,
+          "b_eff": 18.256996450280763,
+          "node_count": 6954.962894774111,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 248952.0,
+          "steps": 9504.0,
+          "max_tile": 16384.0,
+          "time_per_step_ms": 215.70967806417656,
+          "compression_ratio": 0.27415417978651946,
+          "b_eff": 17.146355949286065,
+          "node_count": 6037.229142556549,
+          "tt_hit_rate": 0.0
+        }
+      ],
+      "2-B2": [
+        {
+          "score": 82320.0,
+          "steps": 3857.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 142.0595917833072,
+          "compression_ratio": 0.28528762716272227,
+          "b_eff": 10.482815750556295,
+          "node_count": 1344.371954380508,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 79640.0,
+          "steps": 3651.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 168.6545255202634,
+          "compression_ratio": 0.23821632646444602,
+          "b_eff": 11.477809957896742,
+          "node_count": 1652.0309419496166,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 104692.0,
+          "steps": 4253.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 145.02426795956757,
+          "compression_ratio": 0.26168695979710965,
+          "b_eff": 10.856968706913833,
+          "node_count": 1442.056887635167,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 79888.0,
+          "steps": 3694.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 174.9652073342351,
+          "compression_ratio": 0.2597297030056484,
+          "b_eff": 10.982833271756842,
+          "node_count": 1483.8684709066306,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 87288.0,
+          "steps": 3945.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 166.11182693867153,
+          "compression_ratio": 0.2635941935056822,
+          "b_eff": 10.839540514096846,
+          "node_count": 1439.3378104409528,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 60324.0,
+          "steps": 2787.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 235.3011309899564,
+          "compression_ratio": 0.23623245973152038,
+          "b_eff": 11.554705742262605,
+          "node_count": 1668.778694404591,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 75864.0,
+          "steps": 3457.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 198.1935571717749,
+          "compression_ratio": 0.25614867590085083,
+          "b_eff": 11.135699442754163,
+          "node_count": 1556.2093695777905,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 124980.0,
+          "steps": 5193.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 177.19013636888627,
+          "compression_ratio": 0.24913218209265,
+          "b_eff": 11.254113986091438,
+          "node_count": 1587.6286099345398,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 164164.0,
+          "steps": 6764.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 141.56456036954938,
+          "compression_ratio": 0.26234337150502207,
+          "b_eff": 10.77169971130087,
+          "node_count": 1395.228972653363,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 134636.0,
+          "steps": 5683.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 169.45464466924633,
+          "compression_ratio": 0.26505328442730874,
+          "b_eff": 10.779787370333135,
+          "node_count": 1398.6446164672766,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 136028.0,
+          "steps": 5782.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 171.14461404115517,
+          "compression_ratio": 0.25410256738792547,
+          "b_eff": 11.129339592850474,
+          "node_count": 1550.991181047899,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 150164.0,
+          "steps": 6161.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 165.09065178513407,
+          "compression_ratio": 0.24885304402324848,
+          "b_eff": 11.211485788666211,
+          "node_count": 1548.7069133398247,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 132368.0,
+          "steps": 5555.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 184.85739519438388,
+          "compression_ratio": 0.254068872446984,
+          "b_eff": 11.117164044410503,
+          "node_count": 1535.3763498920086,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 116596.0,
+          "steps": 4876.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 211.78899054746816,
+          "compression_ratio": 0.25823694510089773,
+          "b_eff": 10.961037635804944,
+          "node_count": 1468.5733032602009,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 152008.0,
+          "steps": 6302.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 165.67838719657368,
+          "compression_ratio": 0.26740221480171483,
+          "b_eff": 10.760059882337142,
+          "node_count": 1414.8156433444392,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 152748.0,
+          "steps": 6485.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 161.2745439407953,
+          "compression_ratio": 0.25092730747901415,
+          "b_eff": 11.1631315965269,
+          "node_count": 1539.7924761023744,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 154688.0,
+          "steps": 6617.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 161.94102757630722,
+          "compression_ratio": 0.2633357749832592,
+          "b_eff": 10.87152645393422,
+          "node_count": 1448.6672710788757,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 154484.0,
+          "steps": 6361.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 178.17176301477636,
+          "compression_ratio": 0.2504743632490885,
+          "b_eff": 11.181504164340732,
+          "node_count": 1541.7958189248664,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 136096.0,
+          "steps": 5787.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 196.4004015376638,
+          "compression_ratio": 0.2520815137955096,
+          "b_eff": 11.161776901772903,
+          "node_count": 1551.7346233586732,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 161876.0,
+          "steps": 6720.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 169.22984471060875,
+          "compression_ratio": 0.2852628629953346,
+          "b_eff": 10.318743387876028,
+          "node_count": 1258.2648415414374,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 148936.0,
+          "steps": 6102.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 187.4104086023262,
+          "compression_ratio": 0.25803545198141165,
+          "b_eff": 11.021787623425269,
+          "node_count": 1498.4797640504669,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 124812.0,
+          "steps": 5155.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 223.58406559348256,
+          "compression_ratio": 0.24607655029189615,
+          "b_eff": 11.341732891308208,
+          "node_count": 1605.5321955003878,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 151396.0,
+          "steps": 6423.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 182.75469909713627,
+          "compression_ratio": 0.267354846412457,
+          "b_eff": 10.71445364916225,
+          "node_count": 1388.8044831880447,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 155244.0,
+          "steps": 6457.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 182.5469605140909,
+          "compression_ratio": 0.26517059620546396,
+          "b_eff": 10.75008675623639,
+          "node_count": 1398.9809538556829,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 168316.0,
+          "steps": 6984.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 172.3260410737291,
+          "compression_ratio": 0.2588790814819607,
+          "b_eff": 10.974142757834946,
+          "node_count": 1479.9752326413743,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 151172.0,
+          "steps": 6396.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 192.59231261528825,
+          "compression_ratio": 0.27719391095876544,
+          "b_eff": 10.569970468275253,
+          "node_count": 1334.06768797874,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 148628.0,
+          "steps": 6255.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 199.57883292838795,
+          "compression_ratio": 0.2642052958047692,
+          "b_eff": 10.891497188670746,
+          "node_count": 1450.7456841432224,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 83860.0,
+          "steps": 3955.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 151.72823647623738,
+          "compression_ratio": 0.2645407841767347,
+          "b_eff": 10.871036687090902,
+          "node_count": 1463.5588978766432,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 154436.0,
+          "steps": 6368.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 200.8878705919289,
+          "compression_ratio": 0.26281048849688926,
+          "b_eff": 10.943113543697839,
+          "node_count": 1474.5614696184643,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 34836.0,
+          "steps": 1795.0,
+          "max_tile": 2048.0,
+          "time_per_step_ms": 187.33696453229177,
+          "compression_ratio": 0.24029442476350962,
+          "b_eff": 11.571061340282585,
+          "node_count": 1711.4482182628062,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 192936.0,
+          "steps": 8085.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 160.8985539450899,
+          "compression_ratio": 0.2640715528571063,
+          "b_eff": 10.782291964330831,
+          "node_count": 1406.9228295819935,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 130512.0,
+          "steps": 5439.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 153.83764696691108,
+          "compression_ratio": 0.25128347782580757,
+          "b_eff": 11.17624103008036,
+          "node_count": 1540.765625,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 80708.0,
+          "steps": 3750.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 160.60415443881308,
+          "compression_ratio": 0.2551762371138201,
+          "b_eff": 11.095237623510865,
+          "node_count": 1517.552386030392,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 177396.0,
+          "steps": 7478.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 205.87600974729204,
+          "compression_ratio": 0.26604340506454555,
+          "b_eff": 10.756149784456577,
+          "node_count": 1410.140660516112,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 81296.0,
+          "steps": 3801.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 138.54049771172902,
+          "compression_ratio": 0.2584063966971056,
+          "b_eff": 11.092755581848417,
+          "node_count": 1530.8598106259863,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 80792.0,
+          "steps": 3796.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 138.3954455622861,
+          "compression_ratio": 0.2506428342606939,
+          "b_eff": 11.107792003684217,
+          "node_count": 1516.0118514616802,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 145808.0,
+          "steps": 6174.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 157.9617674817826,
+          "compression_ratio": 0.2553221797362277,
+          "b_eff": 11.029015156998504,
+          "node_count": 1490.4126315789474,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 112964.0,
+          "steps": 4672.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 202.18433595120803,
+          "compression_ratio": 0.2516765666489044,
+          "b_eff": 11.208644017819717,
+          "node_count": 1571.6118125401242,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 157132.0,
+          "steps": 6515.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 165.91261002148474,
+          "compression_ratio": 0.261331868232356,
+          "b_eff": 10.93592810129767,
+          "node_count": 1466.3968692449355,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 70984.0,
+          "steps": 3330.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 160.5443275592902,
+          "compression_ratio": 0.26775452985350934,
+          "b_eff": 10.677974884837758,
+          "node_count": 1363.792554788352,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 141660.0,
+          "steps": 6018.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 174.17483756438057,
+          "compression_ratio": 0.25952125453436126,
+          "b_eff": 11.054064448985933,
+          "node_count": 1528.8968267154012,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 123220.0,
+          "steps": 5072.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 141.9779922531046,
+          "compression_ratio": 0.25075316567072914,
+          "b_eff": 11.253375500018103,
+          "node_count": 1572.2578356002366,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 133344.0,
+          "steps": 5638.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 120.42723395992189,
+          "compression_ratio": 0.26816780090039033,
+          "b_eff": 10.660475151381348,
+          "node_count": 1363.7668026245788,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 179496.0,
+          "steps": 7548.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 154.5834851635973,
+          "compression_ratio": 0.26502458363759945,
+          "b_eff": 10.84485052115688,
+          "node_count": 1434.16041859849,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 113616.0,
+          "steps": 4705.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 184.99770543986295,
+          "compression_ratio": 0.2591574249849721,
+          "b_eff": 10.935903633304513,
+          "node_count": 1447.2724181895453,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 198344.0,
+          "steps": 8448.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 219.47999919517116,
+          "compression_ratio": 0.2797972645227218,
+          "b_eff": 10.48924213494331,
+          "node_count": 1330.119067345248,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 150680.0,
+          "steps": 6417.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 130.28129554378245,
+          "compression_ratio": 0.26182087468124216,
+          "b_eff": 10.885684643562968,
+          "node_count": 1453.285135556248,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 161068.0,
+          "steps": 6758.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 127.44254919366635,
+          "compression_ratio": 0.26118865324379315,
+          "b_eff": 10.902090776477753,
+          "node_count": 1452.6218375499334,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 143632.0,
+          "steps": 6000.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 163.7564940843188,
+          "compression_ratio": 0.2797751513912332,
+          "b_eff": 10.535283355857889,
+          "node_count": 1339.2589568405265,
+          "tt_hit_rate": 0.0
+        },
+        {
+          "score": 168076.0,
+          "steps": 6978.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 170.93215752973174,
+          "compression_ratio": 0.2632093450525511,
+          "b_eff": 10.852581805772987,
+          "node_count": 1434.1258059893967,
+          "tt_hit_rate": 0.0
+        }
+      ],
+      "2-B3": [
+        {
+          "score": 59428.0,
+          "steps": 2738.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 186.3156477181454,
+          "compression_ratio": 0.4433104716278754,
+          "b_eff": 14.89170589502451,
+          "node_count": 3623.644760861628,
+          "tt_hit_rate": 0.030544838615093974
+        },
+        {
+          "score": 60652.0,
+          "steps": 2842.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 181.737032711924,
+          "compression_ratio": 0.44480736006541766,
+          "b_eff": 14.831769211829837,
+          "node_count": 3559.0084417868447,
+          "tt_hit_rate": 0.030485572083125127
+        },
+        {
+          "score": 69680.0,
+          "steps": 3143.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 181.40069974554743,
+          "compression_ratio": 0.42234236087150306,
+          "b_eff": 15.41023017531342,
+          "node_count": 3892.702290076336,
+          "tt_hit_rate": 0.030600766924929218
+        },
+        {
+          "score": 73528.0,
+          "steps": 3416.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 174.56419569797987,
+          "compression_ratio": 0.4447201702493601,
+          "b_eff": 14.869441601477003,
+          "node_count": 3603.580626280363,
+          "tt_hit_rate": 0.030536242365483603
+        },
+        {
+          "score": 79620.0,
+          "steps": 3649.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 163.72443608219208,
+          "compression_ratio": 0.4599467229333144,
+          "b_eff": 14.449494464243614,
+          "node_count": 3354.621917808219,
+          "tt_hit_rate": 0.030026174902167246
+        },
+        {
+          "score": 80376.0,
+          "steps": 3709.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 163.39264474393568,
+          "compression_ratio": 0.4499812250026803,
+          "b_eff": 14.748258118403651,
+          "node_count": 3472.8517520215632,
+          "tt_hit_rate": 0.030134466283012255
+        },
+        {
+          "score": 83808.0,
+          "steps": 3923.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 166.5329375382261,
+          "compression_ratio": 0.44802601506793327,
+          "b_eff": 14.763750368372568,
+          "node_count": 3498.7961264016308,
+          "tt_hit_rate": 0.030469853359688506
+        },
+        {
+          "score": 147496.0,
+          "steps": 6017.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 144.67370644732452,
+          "compression_ratio": 0.4703070252830915,
+          "b_eff": 14.281047105548362,
+          "node_count": 3208.6925888999667,
+          "tt_hit_rate": 0.029791762339597985
+        },
+        {
+          "score": 128440.0,
+          "steps": 5310.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 168.48885458482286,
+          "compression_ratio": 0.4546930761659909,
+          "b_eff": 14.613089905391048,
+          "node_count": 3456.672754660139,
+          "tt_hit_rate": 0.03019191390180983
+        },
+        {
+          "score": 129636.0,
+          "steps": 5401.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 166.36336397630487,
+          "compression_ratio": 0.4521677030220947,
+          "b_eff": 14.668089106058128,
+          "node_count": 3451.5796001480935,
+          "tt_hit_rate": 0.030372785305884005
+        },
+        {
+          "score": 133048.0,
+          "steps": 5609.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 163.66919821746882,
+          "compression_ratio": 0.4612255690730664,
+          "b_eff": 14.424283901501406,
+          "node_count": 3297.7909090909093,
+          "tt_hit_rate": 0.030199986012686447
+        },
+        {
+          "score": 153784.0,
+          "steps": 6335.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 146.96730007891463,
+          "compression_ratio": 0.4840523881438911,
+          "b_eff": 13.891823010386316,
+          "node_count": 3010.244318181818,
+          "tt_hit_rate": 0.029976110885087358
+        },
+        {
+          "score": 142712.0,
+          "steps": 5747.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 168.45741483994382,
+          "compression_ratio": 0.45345388393963787,
+          "b_eff": 14.63623042746465,
+          "node_count": 3413.768267223382,
+          "tt_hit_rate": 0.030167144222295557
+        },
+        {
+          "score": 135140.0,
+          "steps": 5708.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 169.84604414083026,
+          "compression_ratio": 0.4530539577952804,
+          "b_eff": 14.67584639695814,
+          "node_count": 3481.139604133824,
+          "tt_hit_rate": 0.030064484773878804
+        },
+        {
+          "score": 176532.0,
+          "steps": 7408.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 131.1289990956948,
+          "compression_ratio": 0.4927030570737051,
+          "b_eff": 13.597160771359153,
+          "node_count": 2814.7181805911728,
+          "tt_hit_rate": 0.03015055375855344
+        },
+        {
+          "score": 147808.0,
+          "steps": 6020.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 164.75035455904367,
+          "compression_ratio": 0.46757384341087105,
+          "b_eff": 14.249393744257807,
+          "node_count": 3248.86846038864,
+          "tt_hit_rate": 0.030357304808650367
+        },
+        {
+          "score": 166632.0,
+          "steps": 6913.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 145.24999214637026,
+          "compression_ratio": 0.47584242310209657,
+          "b_eff": 14.078839119653201,
+          "node_count": 3149.094012149262,
+          "tt_hit_rate": 0.030126087639414677
+        },
+        {
+          "score": 153096.0,
+          "steps": 6289.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 163.73356677265588,
+          "compression_ratio": 0.46510087974016057,
+          "b_eff": 14.339123875732776,
+          "node_count": 3275.466295707472,
+          "tt_hit_rate": 0.030151331167379544
+        },
+        {
+          "score": 171540.0,
+          "steps": 7103.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 148.58038113738735,
+          "compression_ratio": 0.47728628742925205,
+          "b_eff": 14.068839901523756,
+          "node_count": 3096.2077702702704,
+          "tt_hit_rate": 0.0297292906235653
+        },
+        {
+          "score": 148504.0,
+          "steps": 6100.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 173.90413258482212,
+          "compression_ratio": 0.4619944875744674,
+          "b_eff": 14.434436976740615,
+          "node_count": 3284.183248647763,
+          "tt_hit_rate": 0.030218628270175817
+        },
+        {
+          "score": 167504.0,
+          "steps": 6931.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 158.5666531159837,
+          "compression_ratio": 0.4616914278628871,
+          "b_eff": 14.439197475312044,
+          "node_count": 3341.682487016734,
+          "tt_hit_rate": 0.030220938480888485
+        },
+        {
+          "score": 156348.0,
+          "steps": 6473.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 169.97947361754794,
+          "compression_ratio": 0.4645911364709743,
+          "b_eff": 14.374400818546707,
+          "node_count": 3275.4992276799508,
+          "tt_hit_rate": 0.030079732855376046
+        },
+        {
+          "score": 173360.0,
+          "steps": 7256.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 154.51977683615834,
+          "compression_ratio": 0.467311300915979,
+          "b_eff": 14.292297699775101,
+          "node_count": 3251.093978227918,
+          "tt_hit_rate": 0.029992091321900168
+        },
+        {
+          "score": 168220.0,
+          "steps": 6982.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 161.56785902907063,
+          "compression_ratio": 0.46614786337383096,
+          "b_eff": 14.272957426273887,
+          "node_count": 3217.4267506802234,
+          "tt_hit_rate": 0.03019716221850374
+        },
+        {
+          "score": 167160.0,
+          "steps": 6921.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 163.0745360156028,
+          "compression_ratio": 0.4576804461509194,
+          "b_eff": 14.520482913490351,
+          "node_count": 3371.616295868246,
+          "tt_hit_rate": 0.030241107622244193
+        },
+        {
+          "score": 157152.0,
+          "steps": 6514.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 175.87642455870952,
+          "compression_ratio": 0.4487388893040796,
+          "b_eff": 14.762338645940531,
+          "node_count": 3508.4340752110515,
+          "tt_hit_rate": 0.030194661643923197
+        },
+        {
+          "score": 170936.0,
+          "steps": 7077.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 164.9876310963549,
+          "compression_ratio": 0.4671664137250108,
+          "b_eff": 14.2878328457521,
+          "node_count": 3252.740887256287,
+          "tt_hit_rate": 0.03021302082096864
+        },
+        {
+          "score": 165884.0,
+          "steps": 6954.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 168.1312724658514,
+          "compression_ratio": 0.46214768130042966,
+          "b_eff": 14.421101409336558,
+          "node_count": 3306.164485981308,
+          "tt_hit_rate": 0.030109142259974693
+        },
+        {
+          "score": 176772.0,
+          "steps": 7419.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 165.5230977493262,
+          "compression_ratio": 0.4676979813334956,
+          "b_eff": 14.279637808929142,
+          "node_count": 3212.7504043126683,
+          "tt_hit_rate": 0.030080562234425217
+        },
+        {
+          "score": 172532.0,
+          "steps": 7133.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 175.59052234370526,
+          "compression_ratio": 0.4605335115678879,
+          "b_eff": 14.450504211967717,
+          "node_count": 3315.9481356882534,
+          "tt_hit_rate": 0.030172161950765518
+        },
+        {
+          "score": 173592.0,
+          "steps": 7284.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 173.9448315717221,
+          "compression_ratio": 0.46349971844330035,
+          "b_eff": 14.414994805380056,
+          "node_count": 3296.5805078929307,
+          "tt_hit_rate": 0.0300763093606431
+        },
+        {
+          "score": 130032.0,
+          "steps": 5399.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 144.7117925185171,
+          "compression_ratio": 0.46972745600739296,
+          "b_eff": 14.272783307635187,
+          "node_count": 3262.8116666666665,
+          "tt_hit_rate": 0.02997799503777091
+        },
+        {
+          "score": 132692.0,
+          "steps": 5551.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 144.3167952809784,
+          "compression_ratio": 0.45007249966070595,
+          "b_eff": 14.695474752397613,
+          "node_count": 3473.9299351585014,
+          "tt_hit_rate": 0.030398712163399226
+        },
+        {
+          "score": 146320.0,
+          "steps": 5935.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 142.18187759433948,
+          "compression_ratio": 0.4706633756358729,
+          "b_eff": 14.210889796808216,
+          "node_count": 3169.77173180593,
+          "tt_hit_rate": 0.029923666667894193
+        },
+        {
+          "score": 177180.0,
+          "steps": 7447.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 127.37578317669201,
+          "compression_ratio": 0.47309526978550215,
+          "b_eff": 14.14100859825363,
+          "node_count": 3168.063372717508,
+          "tt_hit_rate": 0.030149042155643246
+        },
+        {
+          "score": 178628.0,
+          "steps": 7519.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 122.62194055851118,
+          "compression_ratio": 0.49271037420813685,
+          "b_eff": 13.634543636979942,
+          "node_count": 2854.570079787234,
+          "tt_hit_rate": 0.029906455477482236
+        },
+        {
+          "score": 156552.0,
+          "steps": 6460.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 131.54811584893932,
+          "compression_ratio": 0.45927747541050107,
+          "b_eff": 14.497315020110575,
+          "node_count": 3340.558427488005,
+          "tt_hit_rate": 0.0301756297021151
+        },
+        {
+          "score": 89040.0,
+          "steps": 4143.0,
+          "max_tile": 4096.0,
+          "time_per_step_ms": 118.8610064913136,
+          "compression_ratio": 0.4691000782980227,
+          "b_eff": 14.277337374028429,
+          "node_count": 3235.7244208494208,
+          "tt_hit_rate": 0.029976727409313095
+        },
+        {
+          "score": 131132.0,
+          "steps": 5444.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 120.65938168962168,
+          "compression_ratio": 0.44607802571442806,
+          "b_eff": 14.844314464133019,
+          "node_count": 3555.4112029384755,
+          "tt_hit_rate": 0.03019125571274942
+        },
+        {
+          "score": 117816.0,
+          "steps": 4922.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 122.95348872638651,
+          "compression_ratio": 0.4419966957581536,
+          "b_eff": 14.96427924500736,
+          "node_count": 3632.646150721105,
+          "tt_hit_rate": 0.030153580715580053
+        },
+        {
+          "score": 176960.0,
+          "steps": 7435.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 130.62140618612244,
+          "compression_ratio": 0.4782460109891312,
+          "b_eff": 14.006965747171446,
+          "node_count": 3074.3986013986014,
+          "tt_hit_rate": 0.029950965355537318
+        },
+        {
+          "score": 134080.0,
+          "steps": 5699.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 130.08978866666664,
+          "compression_ratio": 0.448945369287164,
+          "b_eff": 14.728291005350755,
+          "node_count": 3501.591754385965,
+          "tt_hit_rate": 0.030263566484696903
+        },
+        {
+          "score": 175024.0,
+          "steps": 7308.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 105.22585339991768,
+          "compression_ratio": 0.47195416969568016,
+          "b_eff": 14.154846044519449,
+          "node_count": 3168.0611574770833,
+          "tt_hit_rate": 0.030110391318204185
+        },
+        {
+          "score": 156284.0,
+          "steps": 6472.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 117.99520088058232,
+          "compression_ratio": 0.46788377887101396,
+          "b_eff": 14.279858793927433,
+          "node_count": 3231.567124980689,
+          "tt_hit_rate": 0.0302576511429638
+        },
+        {
+          "score": 133508.0,
+          "steps": 5605.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 109.25746682126342,
+          "compression_ratio": 0.4576595704081765,
+          "b_eff": 14.526057357566641,
+          "node_count": 3362.139136639315,
+          "tt_hit_rate": 0.030199797549019115
+        },
+        {
+          "score": 153336.0,
+          "steps": 6329.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 117.77313390205377,
+          "compression_ratio": 0.4610225019389582,
+          "b_eff": 14.449492473187112,
+          "node_count": 3300.9680884676145,
+          "tt_hit_rate": 0.030007043148459592
+        },
+        {
+          "score": 167548.0,
+          "steps": 6938.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 102.39376408704392,
+          "compression_ratio": 0.4891522852754683,
+          "b_eff": 13.771869000486339,
+          "node_count": 2921.458999855887,
+          "tt_hit_rate": 0.029675039514149015
+        },
+        {
+          "score": 168156.0,
+          "steps": 6961.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 113.06578947141683,
+          "compression_ratio": 0.4636728090024662,
+          "b_eff": 14.405186036336826,
+          "node_count": 3289.4258833668487,
+          "tt_hit_rate": 0.030025499007924866
+        },
+        {
+          "score": 170976.0,
+          "steps": 7060.0,
+          "max_tile": 8192.0,
+          "time_per_step_ms": 112.22571686729766,
+          "compression_ratio": 0.459993637580461,
+          "b_eff": 14.497092060846539,
+          "node_count": 3332.707973374876,
+          "tt_hit_rate": 0.029930318925907078
+        },
+        {
+          "score": 248952.0,
+          "steps": 9504.0,
+          "max_tile": 16384.0,
+          "time_per_step_ms": 92.54731476065295,
+          "compression_ratio": 0.48814009578640793,
+          "b_eff": 13.753519931335816,
+          "node_count": 2947.0485007890584,
+          "tt_hit_rate": 0.029996055766679817
+        }
+      ]
+    }
+  }
+}
