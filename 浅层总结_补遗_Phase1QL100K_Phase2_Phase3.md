@@ -1,0 +1,401 @@
+# 浅层总结补遗：Phase 1 QL 100K + Phase 2 + Phase 3 完整数据总结
+
+> **优先级规则：** final_results 数据为首要来源，其次为中层.md，再其次为文章思路.md。
+> 冲突处均以数据为准，标注原始文档的错误或遗漏。
+
+---
+
+## 〇、全部冲突点汇总
+
+以下列出本文档覆盖范围内，final_results 数据与中层.md、文章思路.md、浅层总结_深度解析_重构.md 之间的所有不一致之处。-final_results 数据-为裁决依据。
+
+### 🔴 严重冲突（结论被推翻或定性错误）
+
+| # | 冲突点 | 文档声称 | 实际数据 | 涉及文档 |
+|---|---|---|---|---|
+| 1 | **TDA-Full 效果** | 「TDA-Full 将从根源上消除白噪声」「降维打击」 | 3-F (TDA-Full) 得分 **17,767**，**低于** 采样版 3-D 的 **18,731**；3-F 过估计 +2.355 **更严重** | 中层.md Phase 3 预测 |
+| 2 | **Downside-MV 效果** | 「策略质变」「生存步数显著提升」 | 3-G (Downside-MV) 得分 **17,937**，**低于** 3-D 的 **18,731**；100K 时 3-E 与 3-D 持平（差 36 分） | 中层.md Phase 3 预测、Qlearning问题.md |
+| 3 | **过估计是否已消失** | 「过估计已消失，全部实验呈低估」「旧版过估计已被退火消除」 | 25K 时 bias 为负（−3,724），**100K 时爆炸回归**：norm_bias_rom = **+1.976**（3-D）/ **+2.355**（3-F）| 浅层总结 §6.3、§7.1 |
+| 4 | **ε+α 退火根治过估计** | 退火「打破了正反馈循环」, 暗示根治 | 退火仅**延缓**而非消除——100K 时过估计从负值翻正并膨胀到 +34,000 | 浅层总结 §6.3、§7.1 |
+| 5 | **Q-Learning 表格「2048率」列** | 表格标注为「2048率」 | 实际填的是 **rate_1024**（如 3-D 写 84%，实际 rate_2048=34%） | 浅层总结 §6.3 表格 |
+| 6 | **「3-D 全组最优」** | 「3-D 以 19,508 分和 34% 2048 率为全组最优」 | 25K 时 3-E 得分 20,607、2048 率 36%，**两项均高于 3-D**；100K 时两者持平 | 浅层总结 §6.3、§6.4 |
+| 7 | **Beam Search 剪枝折损** | 「约 10% 的分数折损」 | depth=2 N-Tuple **+6.5%**（反升）；depth=3 才 −10%；Heuristic 则 −28%~−34% | 中层.md Phase 3 Expectimax |
+
+### 🟡 中等冲突（数值偏差或表述不精确）
+
+| # | 冲突点 | 文档声称 | 实际数据 | 涉及文档 |
+|---|---|---|---|---|
+| 8 | **max_regret 概率点** | 「Disagreement Rate … max_regret 飙升至 19819」——未指明概率点，上下文暗示在 P(4) 最大处 | **19,819 出现在 P(4)=0.4**（不是 0.9）；P(4)=0.9 的 max_regret 仅 13,839 | 中层.md Phase 2 Expectimax |
+| 9 | **Disagreement Rate 数值** | P(4)=0.9 时「升至 0.34」 | 实际为 **0.33**（差 0.01） | 中层.md Phase 2 Expectimax |
+| 10 | **增益链标注** | 「+85%（3-A→3-D）」 | 3-A→3-D 实际为 **+431%**；+85% 的计算对应的是 **3-B→3-D** | 浅层总结 §7.1 |
+| 11 | **100K 局 3-E 领先消失** | 25K 数据显示 3-E > 3-D（+5.6%），文档据此认为 MV 有微弱优势 | 100K 时 3-E=18,768、3-D=18,731，仅差 0.2%，MV 优势荡然无存 | 浅层总结 §6.3 结论 #2 |
+| 12 | **Phase 2 QL Drift 为 smoke 数据** | 中层.md 引用具体数值（如「19,767→5,241」）但未突出标注这是 smoke（定性验证） | 数据源确实为 smoke mode，数值精确但统计效力有限 | 中层.md Phase 2 QL |
+| 13 | **Phase 3 3-D 得分反降** | 文档暗示更多训练局数会提升分数 | 100K 时 3-D=18,731，**低于** 25K 时的 19,508 | 浅层总结 §7.4 待办 |
+
+### 🟢 已验证一致（确认无冲突）
+
+| # | 验证项 | 涉及数据 | 状态 |
+|---|---|---|---|
+| 14 | Phase 1 Expectimax 全部 8 行数据 | search_full_20260627_215003.csv ↔ 浅层总结 §6.1 | ✅ 完全一致 |
+| 15 | Phase 1 MCTS 全部 8 行数据 | planning_full_20260628_035707.csv ↔ 浅层总结 §6.2 | ✅ 完全一致 |
+| 16 | Phase 2 Expectimax M3/M6 漂移数据 | expectimax_drift_full_20260629_215319.csv ↔ 中层.md | ✅ 一致（四舍五入差 1） |
+| 17 | Phase 2 MCTS 漂移数据 | mcts_drift_robustness_full_20260630_002832.csv ↔ 中层.md | ✅ 一致（四舍五入差 1） |
+| 18 | Phase 2 QL drift smoke 数据（3-D, 3-E） | qlearning_drift_results_smoke_20260627_021156.csv ↔ 中层.md | ✅ 完全一致 |
+| 19 | Phase 3 HashDAG 无损对齐 | depth2/depth3 CSV ↔ 中层.md | ✅ 完全一致 |
+| 20 | Phase 3 MCTS 拓扑分析 | mcts_topology_analysis_full_20260630_183925.csv ↔ 中层.md「矮胖 vs 瘦深」 | ✅ 数据与描述一致 |
+
+---
+
+## 一、Phase 1 Q-Learning 100K 局实验（3-D 与 3-E）
+
+### 1.1 数据来源
+
+[final_results/phase_1_qlearning/results/qlearning_parallel_full_20260630_040128.csv](final_results/phase_1_qlearning/results/qlearning_parallel_full_20260630_040128.csv)
+
+### 1.2 实验结果
+
+| 实验 | 得分 | 2048率 | 4096率 | Bias(绝对) | Norm Bias(RoM) | TD误差 RMS(fin) | 训练时间 |
+|---|---|---|---|---|---|---|---|
+| 3-D | 18,731 | 34% | 2% | **+34,002** | **+1.976** | 1,651 | 12,693s |
+| 3-E | 18,768 | 34% | 1% | **+34,314** | **+1.934** | 1,663 | 25,923s |
+
+### 1.3 与 25K 结果的对比
+
+| 指标 | 3-D (25K) | 3-D (100K) | 变化 | 3-E (25K) | 3-E (100K) | 变化 |
+|---|---|---|---|---|---|---|
+| 得分 | 19,508 | 18,731 | −4.0% | **20,607** | 18,768 | −8.9% |
+| 2048率 | 34% | 34% | 持平 | **36%** | 34% | −2pp |
+| 4096率 | 0% | **2%** | 突破 | 0% | 1% | 突破 |
+| Bias(绝对) | −3,724 | **+34,002** | 🔴反转 | −2,614 | **+34,314** | 🔴反转 |
+| Norm Bias(RoM) | −0.194 | **+1.976** | 🔴反转 | −0.142 | **+1.934** | 🔴反转 |
+
+### 1.4 关键发现
+
+**1. 过估计在 100K 局爆炸回归。** **[→ 冲突 #3, #4: 浅层总结 §6.3、§7.1]** 浅层总结 §6.3 中的结论「过估计已消失」是 25K 局下的结论。到 100K 局时，3-D 的 norm_bias_rom 从 −0.194 飙升至 +1.976——网络对盘面的估值比实际回报高约 **2 倍**。浅层总结 §7.4 虽然预警了「不排除 max 算子重新点燃过估计」，但 §6.3 的定性结论在 100K 尺度下已被推翻。
+
+**2. 分数没有随训练量提升。** **[→ 冲突 #11, #13: 浅层总结 §6.3、§7.4]** 3-D 从 19,508 降至 18,731，3-E 从 20,607 降至 18,768。3-E 在 25K 时领先 3-D 1,099 分（+5.6%）的优势到 100K 时完全消失（仅差 36 分）。
+
+**3. 唯一的进步是 4096 率破零。** 25K 时所有 Q-Learning 实验 4096 率为 0%，100K 时 3-D 和 3-E 分别达到 2% 和 1%。但相比 Expectimax 同样的 N-Tuple 权重达到 91% 4096，差距仍然巨大。
+
+**4. $\epsilon+\alpha$ 退火只是延缓而非消除了过估计。** **[→ 冲突 #4: 浅层总结 §6.3、§7.1]** 退火在 25K 尺度压制了 max 算子的正向偏差累积，但随着训练量增加，TD(λ) 资格迹的持续回溯让过估计从负值翻正并爆炸。这说明 V(s') + Afterstate 的过估计是**结构性**问题，需要从 Bellman 目标本身着手（如 TDA-Full），仅靠训练协议的调整不足以根治。
+
+### 1.5 对浅层总结的影响
+
+- §6.3「过估计已消失」→ 需修正为「在 25K 局下被压制，但 100K 局时重新出现并爆炸」
+- §7.1「旧版过估计已被退火消除」→ 需修正为「退火延缓但未消除，长期训练后过估计结构性回归」
+- §6.4 表格「在线学习」行 → 需补充 100K 数据
+
+---
+
+## 二、Phase 2：环境漂移鲁棒性测试
+
+Phase 2 的核心命题：当环境偏移（$P(4)$ 从 10% 渐变至 90%）时，Afterstate 和 State 两种建模方式谁的鲁棒性更强？
+
+### 2.1 Expectimax 环境漂移
+
+**数据来源：** [final_results/phrase_2/expectimax/results/expectimax_drift_full_20260629_215319.csv](final_results/phrase_2/expectimax/results/expectimax_drift_full_20260629_215319.csv)
+
+#### 2.1.1 核心数据（4 组配置 × 9 个概率点）
+
+| P(4) | 配置 | 得分 | 2048率 | 4096率 | Disagreement | Max Regret |
+|---|---|---|---|---|---|---|
+| **0.1** | M3-State-NT | 64,407 | 90% | 72% | — | — |
+| **0.1** | M6-After-ANT | **113,552** | 96% | 92% | 0.26 | 15,464 |
+| **0.5** | M3-State-NT | 25,130 | 46% | 12% | — | — |
+| **0.5** | M6-After-ANT | 39,639 | 72% | 30% | 0.31 | 18,679 |
+| **0.9** | M3-State-NT | 11,459 | 18% | 0% | — | — |
+| **0.9** | M6-After-ANT | 19,357 | 38% | 2% | 0.33 | 13,839 |
+
+**M1（Heuristic+State）和 M2（Heuristic+After）由于人工价值函数区分度低，得分随 P(4) 缓慢下降且差距极小，不做重点分析。**
+
+#### 2.1.2 完整漂移曲线（N-Tuple 组）
+
+| P(4) | M3-State-NT | M6-After-ANT | M6 优势(分) | M6 优势(%) |
+|---|---|---|---|---|
+| 0.1 | 64,407 | 113,552 | +49,145 | +76% |
+| 0.2 | 51,441 | 86,001 | +34,560 | +67% |
+| 0.3 | 54,239 | 69,746 | +15,507 | +29% |
+| 0.4 | 36,081 | 48,369 | +12,288 | +34% |
+| 0.5 | 25,130 | 39,639 | +14,509 | +58% |
+| 0.6 | 23,213 | 36,345 | +13,132 | +57% |
+| 0.7 | 18,767 | 26,216 | +7,449 | +40% |
+| 0.8 | 13,608 | 21,312 | +7,704 | +57% |
+| 0.9 | 11,459 | 19,357 | +7,898 | +69% |
+
+#### 2.1.3 关键发现
+
+**1. 初始猜想被推翻：Afterstate 的绝对优势因环境偏移大幅缩水。** M6 从领先 M3 **+76%** (P=0.1) 缩小到 P=0.9 的 **+69%**，优势比例虽有所保持，但绝对值从 +49,145 暴跌到 +7,898。而 M3 得分下降 **82%** (64k→11k)，M6 下降 **83%** (114k→19k)——两者衰减比例接近，但 M6 的绝对落差更大。
+
+**2. 决策分歧率随环境恶化单调上升。** Disagreement Rate 从 0.1 时的 0.26 上升到 0.9 时的 0.33，说明环境越恶劣，State 和 Afterstate 给出的动作建议分歧越大。Afterstate 的估值在偏移环境中发生了系统性误判。
+
+**3. 中层.md 有一个位置不精确。** **[→ 冲突 #8: 中层.md Phase 2 Expectimax]** 中层.md 写道「max_regret 飙升至 19819」——19819 实际上出现在 P(4)=**0.4**（见 M-Regret 行 `p4_prob=0.4, max_regret=19819.274`），并非最高偏移点 P(4)=0.9。P(4)=0.9 的 max_regret=13,839。结论不受影响（都是大幅飙升），但具体的概率点在文档中未指明。
+
+**4. 内在机理解释**（中层.md 所述，与数据一致）：
+- Afterstate 的 N-Tuple 内置了 P(4)=10% 的先验假设（过拟合了标准环境）
+- 环境偏移后估值期望完全失真——网络「以为」只有 10% 概率出 4，实际出 4 概率高达 90%
+- State 每次全宽展开（排查所有可能落子），天然地计算了当前环境下的真实期望
+
+**5. M-Regret 行（「遗憾追踪」）的实际含义。** CSV 中 M-Regret 行记录的是：在高危环境下，以完全解耦的 Afterstate NT 为基准，统计 State 与 Afterstate 决策不一致的盘面比例以及这种不一致的实际估值代价。
+
+#### 2.1.4 与中层.md / 文章思路.md 的矛盾检查
+
+| 中层.md 声称 | 实际数据 | 判定 |
+|---|---|---|
+| M6 从 113,551 暴跌至 19,356 | P=0.1: 113,552; P=0.9: 19,357 | ✅ 一致（四舍五入差1） |
+| M3 从 64,406 跌至 11,458 | P=0.1: 64,407; P=0.9: 11,459 | ✅ 一致 |
+| Disagreement 从 0.26 升至 0.34 | P=0.1: 0.26; P=0.9: 0.33 | 🟡 0.33 vs 0.34，差 0.01 |
+| max_regret 飙升至 19819 | 出现在 P=0.4（19,819），P=0.9 为 13,839 | 🟡 数字正确但概率点未说明 |
+
+### 2.2 MCTS 环境漂移
+
+**数据来源：** [final_results/phrase_2/mcts_drift/results/mcts_drift_robustness_full_20260630_002832.csv](final_results/phrase_2/mcts_drift/results/mcts_drift_robustness_full_20260630_002832.csv)
+
+#### 2.2.1 核心数据
+
+| P(4) | MCTS-State | MCTS-After | After 优势 | State micro_entropy | After micro_entropy |
+|---|---|---|---|---|---|
+| 0.1 | 28,935 | **35,064** | +21% | 0.397 | 0.405 |
+| 0.3 | 22,426 | **25,388** | +13% | 0.380 | 0.386 |
+| 0.5 | 16,852 | **19,219** | +14% | 0.365 | 0.370 |
+| 0.7 | 15,797 | 14,871 | −6% | 0.358 | 0.362 |
+| 0.9 | 13,977 | **15,410** | +10% | 0.367 | 0.363 |
+
+#### 2.2.2 关键发现
+
+**1. 两者同步衰减，Afterstate 在高偏移时优势不再稳定。** P(4)=0.1 时 Afterstate 领先 6,129 分（+21%），到 P(4)=0.9 时仅领先 1,433 分（+10%）。P(4)=0.7 时 Afterstate 甚至被 State 反超（14,871 < 15,797）。这与 Expectimax 不同——MCTS 的随机采样给了 State 一定的抗偏移能力。
+
+**2. 微观树指标显示访问混乱度居高不下。** 即使环境恶化，micro_entropy 在两者中都维持在 0.36~0.40 之间，没有明显收敛趋势。中层.md 将此描述为「MCTS 在极高随机性干扰下，算力分配开始雨露均沾，难以锁定绝对优势分支」——与数据一致。
+
+**3. 人工价值函数的局限。** 本组实验全程使用人工手工价值函数（FastHeuristic），从未使用 N-Tuple。因此上限被锁死在 ~35K（P=0.1 时），与 Expectimax N-Tuple 的 114K 差距巨大。
+
+**4. 中层.md 对这些数据的呈现准确。** P=0.1 和 P=0.9 的数值、定性描述「得分同步衰减」「micro_entropy 居高不下」均与 CSV 对齐。
+
+#### 2.2.3 与中层.md / 文章思路.md 的矛盾检查
+
+| 中层.md 声称 | 实际数据 | 判定 |
+|---|---|---|
+| After 35,064 → 15,410 | P=0.1: 35,064; P=0.9: 15,410 | ✅ |
+| State 28,934 → 13,976 | P=0.1: 28,935; P=0.9: 13,977 | ✅（四舍五入差1） |
+| Afterstate 需要比 State 更高的算力才能修正估值 | P=0.7 时被反超，整体优势缩水 | ✅ |
+
+### 2.3 Q-Learning 零样本环境漂移
+
+**数据来源：** [final_results/phrase_2/Qlearning/qlearning_drift_20260626_140247/qlearning_drift_results_smoke_20260627_021156.csv](final_results/phrase_2/Qlearning/qlearning_drift_20260626_140247/qlearning_drift_results_smoke_20260627_021156.csv)
+
+**注意：** 此数据为 smoke 模式（仅用于定性趋势验证），非 full mode 完整统计。中层.md 和文章思路.md 均明确标注了这一点。
+
+#### 2.3.1 核心数据（仅 3-D 和 3-E）
+
+| P(4) | 3-D (V+After) | 3-E (MV+After) | 3-E vs 3-D |
+|---|---|---|---|
+| 0.1 | 19,767 | 17,957 | −9.2% |
+| 0.3 | 10,215 | 10,733 | +5.1% |
+| 0.5 | 7,809 | 7,556 | −3.2% |
+| 0.7 | 4,644 | 5,991 | +29.0% |
+| 0.9 | 5,242 | 5,141 | −1.9% |
+
+> 3-A (Q+State) 和 3-B (Q+After) 和 3-C (V+State) 数据完整但非重点——它们本身得分基数低，环境变化后继续走低，定性趋势一致。
+
+#### 2.3.2 关键发现
+
+**1. 全面崩溃：无一个模型能在 P(4)=0.9 时维持在 6K 以上。** 最优的 3-D 在标准环境下 19,767 分，P(4)=0.9 时仅剩 5,242 分（−73%）。3-E 从 17,957 降至 5,141（−71%）。所有模型在极端偏移下都退化为仅能活数百步的随机级别。
+
+**2. 3-E (MV) 没有展现出额外的鲁棒性。** 中层.md 的预期是 MV 通过方差惩罚能在恶劣环境下更稳健。但实际 3-E 在绝大多数 P(4) 下都落后 3-D，P(4)=0.7 时的 +29% 是孤立的表现，很可能只是统计波动（smoke 模式下样本量小）。
+
+**3. 迁移学习（Continual Learning）数据缺失。** 文章思路.md §3.2 提到「在困难环境中继续训练试图恢复分数」但标注为「耗时极长、不建议继续完成」。final_results 中无此项数据。此项结论（「负迁移现象」）是观察性描述而非量化结论。
+
+**4. 中层.md 的数值引用精确。** 「3-D P(4)=0.1 时 19,767 → P(4)=0.9 时 5,241」「3-E 17,957 → 5,140」，CSV 中分别为 19,767.12/5,241.6 和 17,957.44/5,140.72，完全一致。
+
+---
+
+## 三、Phase 3：架构演进与深度优化
+
+Phase 3 在三个模块同时推进：
+- **Q-Learning**：将 TD 目标从单步采样改为精确数学期望（TDA-Full），重构 MV 为仅惩罚下行风险的 Downside-MV
+- **Expectimax**：利用 Afterstate 的确定性实现 HashDAG 去重和 Beam Search 剪枝
+- **MCTS**：接入 N-Tuple 估值，追踪树拓扑的微观变化
+
+### 3.1 Q-Learning：TDA-Full 与 Downside-MV
+
+**数据来源：** [final_results/phrase_3/eval_results/qlearning_parallel_full_20260701_144225.csv](final_results/phrase_3/eval_results/qlearning_parallel_full_20260701_144225.csv)
+
+#### 3.1.1 实验矩阵与结果
+
+| 实验 | 目标模式 | 特征模式 | 得分 | 2048率 | 4096率 | TD RMS(fin) | Norm Bias(RoM) | 训练时间 |
+|---|---|---|---|---|---|---|---|---|
+| 3-C | V+采样 | State | 2,980 | 0% | 0% | 88 | −0.241 | 4,032s |
+| 3-D | V+采样 | Afterstate | 18,731 | **34%** | 2% | 1,651 | **+1.976** | 13,115s |
+| 3-E | TDA-Full | State | 2,980 | 0% | 0% | 158 | +0.502 | 12,434s |
+| 3-F | TDA-Full | Afterstate | 17,767 | 20% | 2% | 1,314 | **+2.355** | 38,403s |
+| 3-G | Downside-MV | Afterstate | 17,937 | 26% | 2% | 1,693 | +1.950 | 24,196s |
+
+#### 3.1.2 与 Phase 1 25K 的对比
+
+| 对比项 | Phase 1 25K 3-D | Phase 3 100K 3-D | Phase 3 100K 3-F | Phase 3 100K 3-G |
+|---|---|---|---|---|
+| 得分 | 19,508 | 18,731 | 17,767 | 17,937 |
+| 2048率 | 34% | 34% | 20% | 26% |
+| 4096率 | 0% | 2% | 2% | 2% |
+| Norm Bias(RoM) | −0.194 | +1.976 | **+2.355** | +1.950 |
+| 训练时间 | 1,705s | 13,115s | **38,403s** | 24,196s |
+
+#### 3.1.3 关键发现
+
+**1. TDA-Full 没有实现预期的「降维打击」。这是 Phase 3 最核心的发现。** **[→ 冲突 #1: 中层.md Phase 3 预测]**
+
+中层.md 预测 TDA-Full 会「从根源上消除环境白噪声」「TD-Error 收敛曲线变得极其平滑」。实际结果：
+- 3-F（TDA-Full+Afterstate）得分 **17,767 < 3-D（采样版）的 18,731**
+- 3-F 的 2048 率 **20% < 3-D 的 34%**
+- 3-F 的过估计 **更严重**（norm_bias_rom +2.355 > +1.976）
+- 3-F 的训练时间是 3-D 的 **2.9 倍**（38,403s vs 13,115s）
+
+**2. 失败原因分析（结合代码实现）：**
+- TDA-Full 每步做精确期望（遍历所有空格 × 两种 tile 概率 = 最多 28 次 board 操作），计算量极大但方向未必正确
+- TD(λ) 资格迹将当前步的精确期望广播到历史数百步的特征，而历史那些步的更新目标仍是采样版的——目标函数的不一致破坏了收敛
+- 精确期望消除了采样噪声，但也降低了模型的探索性，可能导致策略过早锁定次优解
+
+**3. Downside-MV (3-G) 也没有超过简单的 V+Afterstate (3-D)。** **[→ 冲突 #2: 中层.md Phase 3 预测、Qlearning问题.md]**
+- 得分 17,937 < 18,731
+- 2048 率 26% < 34%
+- 下行方差惩罚反而压低了探索积极性，使模型过于保守
+
+**4. 3-E（TDA-Full+State）与 3-C（采样+State）得分完全相同（2,980）。** 这进一步证实了 State 特征下 V 学习的根本缺陷：V(S) 与动作无关，退化为只比即时奖励，换什么目标函数都没用。
+
+**5. 唯一正面结果：TD 误差 RMS 确实降低了。** 3-F 的 td_error_rms_final=1,314，低于 3-D 的 1,651（−20%）。精确期望确实让局部更新信号更稳定，但这种稳定没有转化为更好的策略质量——可能是在「精确但错误的方向」上稳定。
+
+**6. 所有 Phase 3 QL 实验仍然没有 4096 突破。** 最高 4096 率 2%（3-D, 3-F, 3-G），100K 局训练仍然无法接近 Expectimax 冻结 N-Tuple 权重 91% 4096 的水平。
+
+#### 3.1.4 对中层.md 预测的修正
+
+| 中层.md 预测 | 实际结果 | 判定 |
+|---|---|---|
+| 「TDA-Full 的降维打击」 | 3-F 得分和 2048 率均低于采样版 3-D | 🔴 预测被推翻 |
+| 「TD-Error 曲线极其平滑」 | 3-F TD RMS 确实下降 20%，但未转化为得分提升 | 🟡 局部正确，全局无效 |
+| 「零样本泛化能力肉眼可见回升」 | 无 Phase 3 zero-shot 数据，无法验证 | ⚠️ 未测试 |
+| 「Downside-MV 策略质变、生存步数显著提升」 | 3-G 得分 17,937 < 3-D 18,731 | 🔴 预测被推翻 |
+
+### 3.2 Expectimax：Beam Search 与 HashDAG 优化
+
+**数据来源：**
+- Depth=2: [final_results/phrase_3/expectimax_eval_results/depth2/search_optimizations_full_20260629_123634.csv](final_results/phrase_3/expectimax_eval_results/depth2/search_optimizations_full_20260629_123634.csv)
+- Depth=3: [final_results/phrase_3/expectimax_eval_results/depth3/search_optimizations_full_20260629_150446.csv](final_results/phrase_3/expectimax_eval_results/depth3/search_optimizations_full_20260629_150446.csv)
+
+#### 3.2.1 结果总览
+
+**人工价值函数组（Heuristic）：**
+
+| 实验 | Depth=2 得分 | Depth=3 得分 | 说明 |
+|---|---|---|---|
+| Base (全展开) | 12,505 | 20,096 | 基线 |
+| BeamSearch (Top-2) | **8,996** (−28%) | **13,344** (−34%) | 剪枝导致大幅降分 |
+| HashDAG (去重) | 12,505 (≡Base) | 20,096 (≡Base) | 完全无损 |
+
+**N-Tuple 价值函数组：**
+
+| 实验 | Depth=2 得分 | 2048率 | Depth=3 得分 | 2048率 | 4096率 |
+|---|---|---|---|---|---|
+| Base (全展开) | 113,399 | 98% | 144,703 | 100% | 84% |
+| BeamSearch (Top-2) | **120,719** (+6.5%) | **100%** | 130,123 (−10%) | 100% | 76% |
+| HashDAG (去重) | 113,399 (≡Base) | 98% | 144,703 (≡Base) | 100% | 84% |
+
+#### 3.2.2 关键发现
+
+**1. HashDAG 在两种价值函数下均完美无损。** 得分与 Base 完全一致（12,505≡12,505; 113,399≡113,399; 20,096≡20,096; 144,703≡144,703）。压缩率约 0.50~0.55（约一半节点被去重），深层搜索时压缩效果更强（depth=3 时节点减少 70%，时间减少 53%）。
+
+**2. Beam Search 在 N-Tuple depth=2 时反而提升了分数。** **[→ 冲突 #7: 中层.md Phase 3 Expectimax]** 中层.md 写「以极小（约 10%）的分数折损，换取了夸张的速度提升」——这不准确。实际上 depth=2 时 BeamSearch 得分 **+6.5%**（113,399→120,719），且 2048 率从 98% 升至 100%。depth=3 时才是 −10%（144,703→130,123）。需要区分深度来表述。
+
+**3. Heuristic 下 Beam Search 确实灾难性下降。** 人工函数在 depth=2 时 −28%，depth=3 时 −34%，验证了「人工函数的盲目自信会剪掉生路」的判断。
+
+**4. Beam Search 在 N-Tuple depth=2 的正向效果值得注意。** Afterstate + N-Tuple 的高置信度估值在浅层搜索时，Top-2 剪枝不仅没有错失关键分支，反而排除了估值噪声导致的分心路径，起到了「去噪」的意外正面效果。深层搜索时这个红利消失，剪枝的代价开始显现。
+
+#### 3.2.3 对中层.md 的修正
+
+| 中层.md 声称 | 实际数据 | 判定 |
+|---|---|---|
+| 「剪枝优化：约 10% 折损」 | depth=2 **+6.5%**，depth=3 −10% | 🔴 需分深度表述 |
+| 「DAG 优化：完全无损」 | 所有情况下得分完全相同 | ✅ |
+| 「人工函数剪枝导致分数大雪崩」 | −28%~−34% | ✅ |
+| 「时间压缩比极高」 | depth=3 时节点数从 6,938→1,476 (−79%) | ✅ |
+
+### 3.3 MCTS 树拓扑分析
+
+**数据来源：** [final_results/phrase_3/topology_tests/mcts_topology_analysis_full_20260630_183925.csv](final_results/phrase_3/topology_tests/mcts_topology_analysis_full_20260630_183925.csv)
+
+#### 3.3.1 实验结果
+
+| 配置 | 得分 | 2048率 | 4096率 | macro_depth | probe_entropy | probe_depth |
+|---|---|---|---|---|---|---|
+| Heuristic + State | 29,276 | 68% | 6% | 5.22 | **0.221** | 5.37 |
+| Heuristic + Afterstate | 33,272 | 82% | 10% | 5.83 | **0.235** | 6.05 |
+| N-Tuple + State | 90,636 | 100% | 24% | 5.20 | **0.330** | 5.69 |
+| N-Tuple + Afterstate | **135,712** | **100%** | **70%** | **5.71** | 0.318 | **6.29** |
+
+#### 3.3.2 关键发现
+
+**1. N-Tuple 接入后分数跃升 3~4 倍。** Heuristic State 29K → N-Tuple State 91K（×3.1），Heuristic After 33K → N-Tuple After 136K（×4.1）。这验证了 Phase 2 末的推测：「MCTS 的上限被人工价值函数锁死，需换 N-Tuple 才能释放 Afterstate 的拓扑优势」。
+
+**2. 「State 矮胖，Afterstate 瘦深」的拓扑差异在 N-Tuple 组中更显著。**
+- State N-Tuple：probe_entropy=**0.330**（高混乱，算力分散），macro_depth=5.20（较浅）
+- Afterstate N-Tuple：probe_entropy=**0.318**（更低混乱，算力聚焦），macro_depth=5.71（更深）
+- Afterstate 的 layer_profile 在深层（第5层以后）节点数远少于 State，树形更「瘦」
+
+**3. Heuristic 组的拓扑差异微弱。** State 和 Afterstate 在 Heuristic 下的 entropy 差异仅 0.014（0.221 vs 0.235），远小于 N-Tuple 组的 0.012。说明低精度估值无法发挥 Afterstate 的降噪优势——树结构的差异被估值的噪声淹没了。
+
+**4. 中层.md 的「锐利长剑 vs 矮胖伞」比喻与数据一致。** 中层.md 描述「Afterstate 树形态像锐利的长剑（极深且瘦），UCB 算法迅速收敛，90%+ 算力聚焦在唯一正确分支」——layer_profile 数据直接支持这一描述。
+
+---
+
+## 四、跨 Phase 全局结论校准
+
+### 4.1 Afterstate 的优势条件（以数据为准）
+
+| 条件 | 优势程度 | 关键证据 | Phase |
+|---|---|---|---|
+| 预训练 N-Tuple + 正确匹配 | **最大** | Expectimax +77% 得分, −90% 耗时 | 1 |
+| 预训练 N-Tuple + 剪枝 | **最大** | Expectimax 125K 分, 100% 2048 | 1 |
+| 在线 TD 学习 25K | **显著** | 3-D 19,508 vs 3-A 3,672 (+431%) | 1 |
+| N-Tuple MCTS 高算力 | **显著** | 136K vs 91K (+49%) | 3 |
+| 在线 TD 学习 100K ε+α 退火 | **中等** | 3-D 18,731，但过估计+1.976 | 1/3 |
+| TDA-Full + Afterstate 100K | **无优势** | 3-F 17,767 < 采样版 3-D 18,731 | 3 |
+| Downside-MV + Afterstate 100K | **无优势** | 3-G 17,937 < 3-D 18,731 | 3 |
+| 低精度 Heuristic MCTS | **微弱** | After vs State 差异小 | 2/3 |
+| 环境漂移 (P(4)→0.9) | **衰减** | Afterstate 鲁棒性**弱于** State | 2 |
+| Zero-shot 迁移 | **崩溃** | 所有模型在 P(4)=0.9 跌至 5K | 2 |
+
+### 4.2 被数据推翻的预测与假设
+
+| 原始预测 | 来源 | 实际结果 |
+|---|---|---|
+| TDA-Full 消除采样噪声后得分会超越采样版 | 中层.md Phase 3 预测 | 3-F (TDA-Full) **<** 3-D (采样)，过估计更严重 |
+| Downside-MV 带来显著鲁棒性提升 | 中层.md + Qlearning问题.md | 3-G (MV) **<** 3-D (V only)，且 100K 时 3-E = 3-D |
+| 100K 局接近收敛 | 浅层总结 §7.4 暗示 | 得分未提升，过估计反而回归 |
+| ε+α 退火根治过估计 | 浅层总结 §6.3 | 25K 确实根治，100K 时爆炸回归 |
+| Beam Search 约 10% 折损 | 中层.md | depth=2 N-Tuple **+6.5%**，depth=3 才 −10% |
+
+### 4.3 仍需验证的待办项
+
+1. **Phase 3 QL 的零样本漂移测试**：TDA-Full 和 Downside-MV 虽然在标准环境下没有提升，但在环境漂移下是否会表现出更好的泛化性？中层.md 预测「零样本泛化能力会有肉眼可见回升」——缺少数据验证。
+
+2. **更长的 QL 训练（>100K 局）**：100K 时过估计正在上升通道中，200K 或 500K 是否过估计会继续膨胀还是最终收敛？目前无法判断。
+
+3. **MCTS + N-Tuple 的环境漂移测试**：Phase 3 确认了 Afterstate + N-Tuple 在标准环境下的 MCTS 优势（136K vs 91K），但在环境漂移下这一优势是否仍能保持？尚缺数据。
+
+4. **TDA-Full 的目标函数改进**：当前 TDA-Full 与 TD(λ) 资格迹的 mixing 问题（精确期望 ← 采样历史）可能是性能不佳的根本原因。若改为纯 TD(0)（去掉资格迹）再跑 TDA-Full，结果可能有本质不同。
+
+---
+
+## 五、数据来源索引
+
+| 数据 | 路径 |
+|---|---|
+| Phase 1 QL 25K | [final_results/phrase_1/eval_results/qlearning_parallel_full_20260627_235506.csv](final_results/phrase_1/eval_results/qlearning_parallel_full_20260627_235506.csv) |
+| Phase 1 QL 100K | [final_results/phase_1_qlearning/results/qlearning_parallel_full_20260630_040128.csv](final_results/phase_1_qlearning/results/qlearning_parallel_full_20260630_040128.csv) |
+| Phase 1 Expectimax | [final_results/phrase_1/eval_results/search_full_20260627_215003.csv](final_results/phrase_1/eval_results/search_full_20260627_215003.csv) |
+| Phase 1 MCTS | [final_results/phrase_1/eval_results/planning_full_20260628_035707.csv](final_results/phrase_1/eval_results/planning_full_20260628_035707.csv) |
+| Phase 2 Expectimax Drift | [final_results/phrase_2/expectimax/results/expectimax_drift_full_20260629_215319.csv](final_results/phrase_2/expectimax/results/expectimax_drift_full_20260629_215319.csv) |
+| Phase 2 MCTS Drift | [final_results/phrase_2/mcts_drift/results/mcts_drift_robustness_full_20260630_002832.csv](final_results/phrase_2/mcts_drift/results/mcts_drift_robustness_full_20260630_002832.csv) |
+| Phase 2 QL Drift | [final_results/phrase_2/Qlearning/qlearning_drift_20260626_140247/qlearning_drift_results_smoke_20260627_021156.csv](final_results/phrase_2/Qlearning/qlearning_drift_20260626_140247/qlearning_drift_results_smoke_20260627_021156.csv) |
+| Phase 3 QL 100K | [final_results/phrase_3/eval_results/qlearning_parallel_full_20260701_144225.csv](final_results/phrase_3/eval_results/qlearning_parallel_full_20260701_144225.csv) |
+| Phase 3 Expectimax d=2 | [final_results/phrase_3/expectimax_eval_results/depth2/search_optimizations_full_20260629_123634.csv](final_results/phrase_3/expectimax_eval_results/depth2/search_optimizations_full_20260629_123634.csv) |
+| Phase 3 Expectimax d=3 | [final_results/phrase_3/expectimax_eval_results/depth3/search_optimizations_full_20260629_150446.csv](final_results/phrase_3/expectimax_eval_results/depth3/search_optimizations_full_20260629_150446.csv) |
+| Phase 3 MCTS Topology | [final_results/phrase_3/topology_tests/mcts_topology_analysis_full_20260630_183925.csv](final_results/phrase_3/topology_tests/mcts_topology_analysis_full_20260630_183925.csv) |
