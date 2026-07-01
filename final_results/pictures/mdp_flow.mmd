@@ -1,0 +1,22 @@
+graph LR
+    S["S (State)
+Board before move
+Awaiting action"]
+    SP["S' (Afterstate)
+Clean board after merge
+New tile NOT yet spawned"]
+    SN["S_next (Next State)
+Board with new tile
+Awaiting next action"]
+
+    S -->|"Player Action a
+Deterministic merge
++ Reward R"| SP
+    SP -->|"Environment
+Stochastic spawn
+P(2)=90% P(4)=10%"| SN
+    SN -.->|"Loop"| S
+
+    style S fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px,color:#3a4f6a
+    style SP fill:#e3efe0,stroke:#4a8a4a,stroke-width:3px,color:#2d4a2d
+    style SN fill:#f0ebe0,stroke:#b8a878,stroke-width:2px,color:#6e5a30

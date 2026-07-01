@@ -1,0 +1,24 @@
+graph TB
+    subgraph THEORY["Three Theory Dimensions"]
+        T1["Topology Folding<br/>Does the search tree<br/>become thinner?"]
+        T2["Variance Reduction<br/>Is sampling noise<br/>reduced?"]
+        T3["Gradient Stability<br/>Are weight updates<br/>smoother?"]
+    end
+
+    subgraph METHOD["Three Experimental Methods"]
+        M1["<b>Expectimax</b><br/>───────<br/>Fully TRUSTS the evaluator<br/>Frozen weights · Exhaustive search<br/>→ Measures tree structure"]
+        M2["<b>MCTS</b><br/>───────<br/>Does NOT trust the evaluator<br/>Model-free · Online rollouts<br/>→ Measures sampling noise"]
+        M3["<b>TD Learning</b><br/>───────<br/>BECOMES the evaluator<br/>Trains from scratch · Updates every step<br/>→ Measures gradient stability"]
+    end
+
+    T1 -->|"Count nodes, compute compression ratio"| M1
+    T2 -->|"Repeated sampling, estimate value distribution"| M2
+    T3 -->|"Track TD error, measure convergence"| M3
+
+    style THEORY fill:#f5f1ec,stroke:#d5cec4
+    style T1 fill:#e3efe0,stroke:#8aaa8a,color:#3a5a3a
+    style T2 fill:#e0e7ef,stroke:#7a8faa,color:#3a4f6a
+    style T3 fill:#f0ebe0,stroke:#b8a878,color:#6e5a30
+    style M1 fill:#e3efe0,stroke:#8aaa8a,stroke-width:2px,color:#2d4a2d
+    style M2 fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px,color:#2d3f5a
+    style M3 fill:#f0ebe0,stroke:#b8a878,stroke-width:2px,color:#4a3a20

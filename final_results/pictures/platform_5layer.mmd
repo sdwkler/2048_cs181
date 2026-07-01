@@ -1,0 +1,35 @@
+graph BT
+    subgraph L5["Layer 5 · Experiment Orchestration"]
+        E1["Phase 1/2/3 Scripts + collect_results.py<br/>One-click execution · Result aggregation · Auto-plotting"]
+    end
+    subgraph L4["Layer 4 · Three Paradigm Experiments"]
+        P1["Expectimax 1-A ~ 1-H<br/>Trusts evaluator · Frozen weights<br/>Exhaustive tree search · 2x2 ablation<br/>→ Measures tree structure"]
+        P2["MCTS 2-A ~ 2-H<br/>Model-free · Online rollouts<br/>PUCT adaptive budget allocation<br/>→ Measures sampling noise"]
+        P3["TD Learning 3-A ~ 3-G<br/>Trains from scratch · Online TD(0) updates<br/>Five-group ablation + TDA-Full + Downside-MV<br/>→ Measures gradient stability"]
+    end
+    subgraph L3["Layer 3 · Shared Infrastructure"]
+        C1["Dual-mode validation: smoke / full<br/>Shared seed=181 · Parameter isolation"]
+        C2["Game simulation & common metrics<br/>Score · Tile rates · Time per move"]
+        C3["High-pressure board generation<br/>Empty ≤ 3 · Critical board snapshots"]
+    end
+    subgraph L2["Layer 2 · Representation & Evaluation"]
+        subgraph L2_NT["NTupleEvaluator"]
+            N1["N-Tuple Network<br/>4 pattern + 4 diff_pattern<br/>6-tile samples · 8 isomorphic windows<br/>Offline pre-training / Online TD(0)<br/>Two frozen weight sets: State NT + After NT"]
+        end
+        V1["HeuristicEvaluator<br/>Empty cells · Monotonicity · Smoothness · Corner max<br/>Hand-crafted weights"]
+        V3["FastHeuristic<br/>Same logic as Heuristic<br/>65536-row lookup table + bitwise O(1)<br/>Purpose-built for MCTS rollouts"]
+    end
+    subgraph L1["Layer 1 · Board Engine (Base)"]
+        B1["64-bit Bitboard<br/>16 cells × 4 bits → single integer<br/>65536-row precomputed lookup table<br/>Rotation + mirror for 4-direction unification<br/>Branch-free · Loop-free · Microsecond-level"]
+    end
+
+    L1 --> L2 --> L3 --> L4 --> L5
+
+    style L1 fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px,color:#3a4f6a
+    style L2 fill:#f5f1ec,stroke:#d5cec4,stroke-width:1px,color:#4a423b
+    style L2_NT fill:#e8e0f0,stroke:#9a8aaa,stroke-width:1px,color:#4a3a5a
+    style V1 fill:#f0ebe0,stroke:#b8a878,stroke-width:1px,color:#6e5a30
+    style V3 fill:#f0ebe0,stroke:#b8a878,stroke-width:1px,color:#6e5a30
+    style L3 fill:#e3efe0,stroke:#8aaa8a,stroke-width:1px,color:#3a5a3a
+    style L4 fill:#e3efe0,stroke:#8aaa8a,stroke-width:1px,color:#3a5a3a
+    style L5 fill:#e0e7ef,stroke:#7a8faa,stroke-width:1px,color:#3a4f6a

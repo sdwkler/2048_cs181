@@ -1,0 +1,19 @@
+graph TD
+    S1["State S<br/>Board before move<br/>Awaiting action"]
+    A1["Action a<br/>Deterministic slide<br/>+ Reward R"]
+    SP["Afterstate S'<br/>Clean board after merge<br/>Tiles merged<br/>New tile NOT yet spawned<br/>★ Core decoupling node"]
+    ENV["Stochastic Environment<br/>P(2)=90% P(4)=10%<br/>Spawns new tile in empty cell"]
+    SN1["S_next<br/>Next board state<br/>Contains stochastic noise"]
+    EVAL1["Evaluation Target<br/>Clean S'<br/>No stochastic noise"]
+
+    S1 --> A1 --> SP
+    SP --> EVAL1
+    SP --> ENV --> SN1
+    SN1 -.->|Loop| S1
+
+    style S1 fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px,color:#3a4f6a
+    style SP fill:#e3efe0,stroke:#8aaa8a,stroke-width:3px,color:#2d4a2d
+    style EVAL1 fill:#e3efe0,stroke:#8aaa8a,stroke-width:2px,color:#3a5a3a
+    style A1 fill:#e0e7ef,stroke:#7a8faa,stroke-width:1px,color:#3a4f6a
+    style ENV fill:#f0ebe0,stroke:#b8a878,stroke-width:1px,color:#6e5a30
+    style SN1 fill:#f0e3e3,stroke:#b88080,stroke-width:1px,color:#6e3a3a

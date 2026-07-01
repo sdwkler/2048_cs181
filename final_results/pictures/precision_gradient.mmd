@@ -1,0 +1,16 @@
+graph LR
+    subgraph HIGH["High Precision"]
+        H1["Pre-trained N-Tuple<br/>Expectimax +77% score<br/>-90% time per move"]
+    end
+    subgraph MID["Medium Precision"]
+        M1["Online TD 25K<br/>3-B to 3-D: +85%<br/>3-D: 19,508 points"]
+    end
+    subgraph LOW["Low Precision"]
+        L1["Pure Rollout MCTS<br/>Afterstate only +12%<br/>Loses at low budgets"]
+    end
+
+    HIGH -->|"Gain decays"| MID -->|"Gain continues to decay"| LOW
+
+    style HIGH fill:#e3efe0,stroke:#8aaa8a,stroke-width:2px,color:#3a5a3a
+    style MID fill:#f0ebe0,stroke:#b8a878,stroke-width:2px,color:#6e5a30
+    style LOW fill:#f0e3e3,stroke:#b88080,stroke-width:2px,color:#6e3a3a

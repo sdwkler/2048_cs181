@@ -1,0 +1,19 @@
+graph TB
+    subgraph MATRIX["  "]
+        direction LR
+        CELL_D["<b>1-D · Both OFF (Baseline)</b><br/>━━━━━━━━━━<br/>Tree: Standard<br/>Evaluator: State NT (matched)<br/>━━━━━━━━━━<br/>Score 64,740<br/>Compression 0.998 · Time 26.8ms"]
+        CELL_E["<b>1-E · MISMATCH</b><br/>━━━━━━━━━━<br/>Tree: Standard<br/>Evaluator: After NT (mismatched!)<br/>━━━━━━━━━━<br/>Score 5,066 (-92%)<br/>Worse than greedy baseline!"]
+        CELL_F["<b>1-F · Tree Only</b><br/>━━━━━━━━━━<br/>Tree: Afterstate<br/>Evaluator: State NT (matched)<br/>━━━━━━━━━━<br/>Score 60,126 (-7%)<br/>Compression 0.553 · Time 2.6ms"]
+        CELL_G["<b>1-G · Full Decoupling</b><br/>━━━━━━━━━━<br/>Tree: Afterstate<br/>Evaluator: After NT (matched)<br/>━━━━━━━━━━<br/>Score 114,885 (+77%)<br/>Compression 0.553 · Time 2.6ms"]
+    end
+
+    CELL_D -->|"Tree only: 64,740 to 60,126 (-7%)"| CELL_F
+    CELL_F -->|"Add evaluator: 60,126 to 114,885 (+91%)"| CELL_G
+    CELL_D -.->|"Evaluator only (MISMATCH!): 64,740 to 5,066 (-92%)"| CELL_E
+    CELL_E -.->|"Fix tree: 5,066 to 114,885"| CELL_G
+
+    style CELL_D fill:#e0e7ef,stroke:#7a8faa,color:#3a4f6a
+    style CELL_E fill:#f0e3e3,stroke:#b88080,stroke-width:2px,color:#6e3a3a
+    style CELL_F fill:#f0ebe0,stroke:#b8a878,color:#6e5a30
+    style CELL_G fill:#e3efe0,stroke:#8aaa8a,stroke-width:3px,color:#2d4a2d
+    style MATRIX fill:#f5f1ec,stroke:#d5cec4

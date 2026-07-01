@@ -1,0 +1,35 @@
+graph LR
+    L1["<b>Phase 1 · Standard Environment</b>
+    ────────────
+    Fixed P(4)=10%
+    Expectimax · MCTS · TD Learning
+    2x2 Ablation + 3-Algorithm Comparison
+    ────────────
+    Afterstate +77% score -90% time
+    1-E mismatch collapse
+    Overestimation explodes at 100K"]
+
+    L2["<b>Phase 2 · Environment Drift</b>
+    ────────────
+    P(4) 10% to 90% · Zero-shot Transfer
+    Expectimax · MCTS · Q-Learning
+    Three algorithms tested simultaneously
+    ────────────
+    Afterstate advantage systematically decays
+    MCTS crossover at P(4)=0.7"]
+
+    L3["<b>Phase 3 · Architecture Improvement</b>
+    ────────────
+    Fixing Phase 1/2 Deficiencies
+    TDA-Full · Downside-MV
+    HashDAG · MCTS + N-Tuple
+    ────────────
+    TDA-Full/Downside-MV fail to beat baseline
+    MCTS+N-Tuple (136K) surpasses Expectimax (115K)"]
+
+    L1 -->|"Leads to: overestimation +1.976 · evaluator bottleneck"| L2
+    L2 -->|"Leads to: Afterstate less robust than State"| L3
+
+    style L1 fill:#e3efe0,stroke:#8aaa8a,stroke-width:2px,color:#3a5a3a
+    style L2 fill:#f0ebe0,stroke:#b8a878,stroke-width:2px,color:#6e5a30
+    style L3 fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px,color:#3a4f6a

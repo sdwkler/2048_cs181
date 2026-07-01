@@ -1,0 +1,17 @@
+graph TD
+    S0["State S<br/>Board before move<br/>Awaiting action"]
+    A0["Action a<br/>Deterministic merge<br/>+ Reward R"]
+    MIX["Action + Randomness Mixed<br/>New tile spawns immediately<br/>Deterministic & stochastic<br/>conflated in one step"]
+    SN0["S_next<br/>Next board state<br/>Contaminated by noise"]
+    EVAL0["Evaluation Target<br/>Noisy State"]
+
+    S0 --> A0 --> MIX
+    MIX --> SN0
+    MIX --> EVAL0
+    SN0 -.->|Loop| S0
+
+    style S0 fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px,color:#3a4f6a
+    style MIX fill:#f0e3e3,stroke:#b88080,stroke-width:2px,color:#6e3a3a
+    style SN0 fill:#f0e3e3,stroke:#b88080,stroke-width:1px,color:#6e3a3a
+    style EVAL0 fill:#f0e3e3,stroke:#b88080,stroke-width:1px,color:#6e3a3a
+    style A0 fill:#e0e7ef,stroke:#7a8faa,stroke-width:1px,color:#3a4f6a
