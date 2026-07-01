@@ -1,0 +1,14 @@
+graph TD
+    S_t["State S_t<br/>（含随机落子的完整盘面）"]
+    A_t["ε-贪心选动作 a"]
+    R_t["获得即时奖励 R"]
+    S_next["S_t+1<br/>（已含随机落子）"]
+
+    UPDATE1["<b>更新: Q(S,a) ← Q(S,a) + α·[R + γ·max Q(S_next,a') − Q(S,a)]</b><br/>max 从含噪 Q 分布中挑最大值 → 系统性过估计"]
+    UPDATE1 --> S_next
+
+    S_t --> A_t --> R_t --> S_next
+
+    style S_t fill:#e0e7ef,stroke:#7a8faa
+    style UPDATE1 fill:#f0e3e3,stroke:#b88080,stroke-width:2px
+    style S_next fill:#f0e3e3,stroke:#b88080

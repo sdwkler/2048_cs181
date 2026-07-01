@@ -1,0 +1,26 @@
+graph TD
+    ROOT["根节点 State S"]
+    A1["动作: UP"]
+    A2["动作: RIGHT"]
+    A3["动作: DOWN"]
+    A4["动作: LEFT"]
+
+    subgraph BRANCH["机会节点: S_next（含随机落子）"]
+      C1["在(0,0)生成2"]
+      C2["在(0,1)生成2"]
+      C3["在(1,2)生成4"]
+      CN["... 每个动作最多 2×空格数个分岔"]
+    end
+
+    EVAL["叶子评估: 含噪声的 S_next"]
+
+    ROOT --> A1 & A2 & A3 & A4
+    A1 --> C1 & C2 & C3 & CN
+    A2 -->|"同样爆炸式分岔"| BRANCH
+    A3 -->|"同样爆炸式分岔"| BRANCH
+    A4 -->|"同样爆炸式分岔"| BRANCH
+    C1 & C2 & C3 & CN --> EVAL
+
+    style ROOT fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px
+    style EVAL fill:#f0e3e3,stroke:#b88080,stroke-width:2px
+    style BRANCH fill:#fff0f0,stroke:#e0c0c0

@@ -1,0 +1,23 @@
+graph LR
+    subgraph INIT["启动时预计算（一次性）"]
+        PRECOM["穷举全部 65536 种行取值<br/>对每行预模拟左滑合并<br/>存储: 新行值 + 合并得分<br/>耗时: 数秒，内存: ~1MB"]
+    end
+
+    subgraph RUNTIME["运行时（每步滑动）"]
+        EXTRACT["提取行_i<br/>位移 + 掩码"]
+        LOOKUP_T["row_lut[row_i]<br/>一次数组访问"]
+        MERGE["OR 拼入输出<br/>累加得分"]
+    end
+
+    subgraph ROTATE["四方向统一为左滑"]
+        DIR["UP = 顺时针转90° → 左滑 → 逆时针转90°<br/>DOWN = 逆时针转90° → 左滑 → 顺时针转90°<br/>RIGHT = 镜像 → 左滑 → 镜像<br/>只需一张查表!"]
+    end
+
+    PRECOM --> LOOKUP_T
+    EXTRACT --> LOOKUP_T --> MERGE
+    DIR --> EXTRACT
+
+    style PRECOM fill:#f0ebe0,stroke:#b8a878
+    style LOOKUP_T fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+    style MERGE fill:#e0e7ef,stroke:#7a8faa
+    style DIR fill:#f5f1ec,stroke:#d5cec4

@@ -1,0 +1,19 @@
+graph TB
+    subgraph MATRIX["2×2 消融矩阵"]
+        direction LR
+        D["<b>1-D: 全关（基线）</b><br/>树结构: Standard ❌<br/>评估器: State NT 看 S_next<br/>得分: 64,740 | 耗时: 26.8ms"]
+        E["<b>1-E: 错配 ⚠</b><br/>树结构: Standard ❌<br/>评估器: After NT 看 S_next<br/>（在 S' 上训练却在 S_next 上评估！）<br/>得分: 5,066 (−92%)"]
+        F["<b>1-F: 仅树结构开启</b><br/>树结构: Afterstate ✅<br/>评估器: State NT 看 S'<br/>得分: 60,126 (−7%) | 耗时: 2.6ms"]
+        G["<b>1-G: 完全解耦 ★</b><br/>树结构: Afterstate ✅<br/>评估器: After NT 看 S'<br/>得分: 114,885 (+77%) | 耗时: 2.6ms"]
+    end
+
+    D -->|"仅换树: −7%"| F
+    F -->|"+换评估器: +91%"| G
+    D -.->|"仅换评估器（错配！）: −92%"| E
+    E -.->|"修正树结构: 灾难解除"| G
+
+    style D fill:#e0e7ef,stroke:#7a8faa,color:#3a4f6a
+    style E fill:#f0e3e3,stroke:#b88080,stroke-width:2px,color:#6e3a3a
+    style F fill:#f0ebe0,stroke:#b8a878,color:#6e5a30
+    style G fill:#e3efe0,stroke:#4a8a4a,stroke-width:3px,color:#2d4a2d
+    style MATRIX fill:#f5f1ec,stroke:#d5cec4

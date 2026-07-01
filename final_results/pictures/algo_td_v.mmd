@@ -1,0 +1,17 @@
+graph TD
+    S_t2["State S_t"]
+    A_t2["选动作 a:<br/>max [R + V(S')]"]
+    SP_t["Afterstate S'_t<br/>（纯净盘面，无随机噪声）<br/>评估: V(S')"]
+    ENV_t["环境随机落子"]
+    S_next2["S_t+1"]
+
+    UPDATE2["<b>更新: V(S') ← V(S') + α·[R + V(S'_next) − V(S')]</b><br/>目标值确定性 → 梯度更平滑<br/>但 max over V(S') 仍累积偏差"]
+    UPDATE2 --> S_next2
+
+    S_t2 --> A_t2 --> SP_t
+    SP_t --> UPDATE2
+    SP_t --> ENV_t --> S_next2
+
+    style S_t2 fill:#e0e7ef,stroke:#7a8faa
+    style SP_t fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+    style UPDATE2 fill:#f0ebe0,stroke:#b8a878,stroke-width:2px

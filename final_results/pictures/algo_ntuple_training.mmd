@@ -1,0 +1,19 @@
+graph LR
+    subgraph TRAIN["同一网络结构 · 不同观测对象 · 各自训练5万局"]
+        direction TB
+        T1["<b>State NT 训练</b><br/>输入: S（含随机落子）<br/>输出: V(S)<br/>→ State NT 冻结权重"]
+        T2["<b>Afterstate NT 训练</b><br/>输入: S'（不含随机落子）<br/>输出: V(S')<br/>→ After NT 冻结权重"]
+    end
+
+    subgraph USE["用于 Expectimax 2×2 矩阵"]
+        U1["1-D: State NT 评估 S_next → 匹配 ✅<br/>1-F: State NT 评估 S' → 可用（−7%）"]
+        U2["1-G: After NT 评估 S' → 匹配 ✅<br/>1-E: After NT 评估 S_next → 灾难（−92%）"]
+    end
+
+    T1 --> U1; T2 --> U2
+
+    style TRAIN fill:#f5f1ec,stroke:#d5cec4
+    style T1 fill:#e0e7ef,stroke:#7a8faa
+    style T2 fill:#e3efe0,stroke:#4a8a4a
+    style U1 fill:#e0e7ef,stroke:#7a8faa
+    style U2 fill:#f0e3e3,stroke:#b88080

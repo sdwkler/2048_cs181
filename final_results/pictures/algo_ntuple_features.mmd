@@ -1,0 +1,17 @@
+graph TB
+    BOARD["4×4 棋盘<br/>16格 × 4bit = 64位盘面"]
+
+    subgraph FEATURES["8 条 N-Tuple Feature"]
+        direction LR
+        P["<b>4 条 Pattern（绝对值）</b><br/>直接取6格方块指数<br/>6格 × 4bit = 24bit 索引<br/>权重表: 2^24 = 16M<br/>作用: 保证精度"]
+        D["<b>4 条 Diff（差分）</b><br/>存相邻格差值<br/>5个差值 × 5bit = 25bit 索引<br/>权重表: 2^25 ≈ 33.5M<br/>作用: 负责泛化"]
+    end
+
+    SUM["V(S') = 全部 8 条 Feature 得分之和"]
+
+    BOARD --> FEATURES --> SUM
+
+    style BOARD fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px
+    style P fill:#e3efe0,stroke:#4a8a4a
+    style D fill:#e0e7ef,stroke:#7a8faa
+    style SUM fill:#f0ebe0,stroke:#b8a878,stroke-width:2px

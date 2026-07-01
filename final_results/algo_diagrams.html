@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2048 Afterstate Algorithm & Architecture Diagrams</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Georgia', serif;
+    background: #f5f1ec; color: #3b3733; padding: 40px 20px; line-height: 1.6;
+  }
+  .container { max-width: 1300px; margin: 0 auto; }
+  h1 { text-align: center; font-size: 2em; font-weight: 700; margin-bottom: 6px; color: #2d2a26; }
+  .subtitle { text-align: center; color: #8c8279; margin-bottom: 44px; font-size: 1em; }
+  .section {
+    background: #fff; border-radius: 10px; padding: 30px; margin-bottom: 26px;
+    border: 1px solid #e4ddd4; box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  }
+  .section h2 {
+    font-size: 1.25em; font-weight: 700; margin-bottom: 20px; padding-bottom: 10px;
+    border-bottom: 1px solid #e4ddd4; color: #4a423b;
+  }
+  .mermaid { display: flex; justify-content: center; overflow-x: auto; padding: 6px 0; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+  .card {
+    background: #faf8f5; border-radius: 8px; padding: 22px; border: 1px solid #e4ddd4;
+  }
+  .card h3 { margin-bottom: 12px; color: #4a423b; font-size: 1em; font-weight: 700; }
+  .card p { color: #5e554c; font-size: .9em; line-height: 1.7; }
+  .muted { color: #8c8279; font-size: .88em; }
+  .callout {
+    border-left: 4px solid #c4a35a; padding: 15px 20px; margin-top: 20px;
+    background: #faf6ee; border-radius: 0 7px 7px 0; font-size: .9em; color: #5e4a2a;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>2048 Afterstate: Algorithm & Architecture Diagrams</h1>
+<p class="subtitle">Expectimax · MCTS · TD Learning · N-Tuple Network · Bitboard Engine · Three-Phase Pipeline</p>
+
+<!-- ============================================================ -->
+<!-- 1. Expectimax -->
+<!-- ============================================================ -->
+<div class="section">
+  <h2>1. Expectimax: Exhaustive Search + 2×2 Ablation Matrix</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Standard Tree (No Decoupling)</h3>
+      <div class="mermaid">
+graph TD
+    ROOT["Root: State S"]
+    A1["Action: UP"]
+    A2["Action: RIGHT"]
+    A3["Action: DOWN"]
+    A4["Action: LEFT"]
+    C1["Spawn 2 at (0,0)"]
+    C2["Spawn 2 at (0,1)"]
+    C3["Spawn 4 at (1,2)"]
+    CN["... 2 x empty_cells branches"]
+    D1["Another branch set..."]
+    D2["Another branch set..."]
+    EVAL1["Leaf eval: noisy S_next"]
+    EVAL2["Leaf eval: noisy S_next"]
+
+    ROOT --> A1 & A2 & A3 & A4
+    A1 --> C1 & C2 & C3 & CN
+    A2 --> D1 & D2
+    C1 --> EVAL1
+    C2 --> EVAL1
+    C3 --> EVAL1
+    CN --> EVAL1
+    D1 --> EVAL2
+    D2 --> EVAL2
+
+    style ROOT fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px
+    style EVAL1 fill:#f0e3e3,stroke:#b88080,stroke-width:2px
+    style EVAL2 fill:#f0e3e3,stroke:#b88080,stroke-width:2px
+      </div>
+      <p style="font-size:.83em;color:#9b5c5c;margin-top:6px">
+        Each action immediately spawns random tiles → branching explosion. b_eff ≈ 12, compression ≈ 1.0 (no node sharing).
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Afterstate Tree (Decoupled)</h3>
+      <div class="mermaid">
+graph TD
+    ROOT2["Root: State S"]
+    A2a["Action: UP"]
+    A2b["Action: RIGHT"]
+    A2c["Action: DOWN"]
+    A2d["Action: LEFT"]
+    SP1["Afterstate S'_1"]
+    SP2["Afterstate S'_2"]
+    SHARED["Shared node S'_3<br/>Multiple actions converge here"]
+
+    ROOT2 --> A2a & A2b & A2c & A2d
+    A2a --> SP1
+    A2b --> SP2
+    A2c --> SHARED
+    A2d --> SHARED
+
+    style ROOT2 fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px
+    style SP1 fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+    style SP2 fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+    style SHARED fill:#2d5a2d,stroke:#1a3a1a,stroke-width:3px,color:#fff
+      </div>
+      <p style="font-size:.83em;color:#5c7a5c;margin-top:6px">
+        Actions reach clean S' first → different actions may share the same S' → tree collapses to DAG. Compression ≈ 0.55, b_eff ≈ 5.5, speedup 10.3×.
+      </p>
+    </div>
+  </div>
+
+  <div style="margin-top:22px">
+    <h3>2×2 Ablation Matrix: Tree Structure × Evaluation Target</h3>
+    <div class="mermaid">
+graph TB
+    subgraph MATRIX["2x2 Ablation Matrix"]
+        direction LR
+        D["1-D: Baseline<br/>Standard + State NT<br/>Score: 64,740"]
+        E["1-E: Mismatch!!<br/>Standard + After NT<br/>Score: 5,066 (-92%)"]
+        F["1-F: Tree only<br/>Afterstate + State NT<br/>Score: 60,126 (-7%)"]
+        G["1-G: Full decoupling<br/>Afterstate + After NT<br/>Score: 114,885 (+77%)"]
+    end
+
+    D -->|"Switch tree: -7%"| F
+    F -->|"+Switch eval: +91%"| G
+    D -.->|"Switch eval only: -92%!"| E
+    E -.->|"Fix tree structure"| G
+
+    style D fill:#e0e7ef,stroke:#7a8faa,color:#3a4f6a
+    style E fill:#f0e3e3,stroke:#b88080,stroke-width:2px,color:#6e3a3a
+    style F fill:#f0ebe0,stroke:#b8a878,color:#6e5a30
+    style G fill:#e3efe0,stroke:#4a8a4a,stroke-width:3px,color:#2d4a2d
+    style MATRIX fill:#f5f1ec,stroke:#d5cec4
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 2. MCTS -->
+<!-- ============================================================ -->
+<div class="section">
+  <h2>2. MCTS: Online Rollout Sampling + PUCT Resource Allocation</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Standard MCTS Tree</h3>
+      <div class="mermaid">
+graph TD
+    ROOT3["Root S<br/>Budget: 200-2000 rollouts"]
+    A_UP["UP: N=500"]
+    A_RT["RIGHT: N=400"]
+    A_DN["DOWN: N=600"]
+    A_LF["LEFT: N=500"]
+    S1["S_next_1<br/>with random tile"]
+    S2["S_next_2<br/>with random tile"]
+    S3["S_next_3<br/>with random tile"]
+    R1["Rollout<br/>Different starting points<br/>Variance: HIGH"]
+
+    ROOT3 --> A_UP & A_RT & A_DN & A_LF
+    A_DN --> S1 & S2 & S3
+    S1 --> R1
+    S2 --> R1
+    S3 --> R1
+
+    style ROOT3 fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px
+    style A_DN fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+    style S1 fill:#f0e3e3,stroke:#b88080
+    style S2 fill:#f0e3e3,stroke:#b88080
+    style S3 fill:#f0e3e3,stroke:#b88080
+    style R1 fill:#f0ebe0,stroke:#b8a878
+      </div>
+      <p style="font-size:.83em;color:#9b5c5c;margin-top:6px">
+        Each rollout starts from a different noisy S_next. Noise directly pollutes value baseline → high variance at low budgets.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Afterstate MCTS Tree</h3>
+      <div class="mermaid">
+graph TD
+    ROOT4["Root S<br/>Same budget"]
+    A_DN2["DOWN: N=800<br/>PUCT converges fast"]
+    SP_CLEAN["Afterstate S'<br/>Clean board"]
+    R4["Rollout x N<br/>All start from same S'<br/>Variance: LOW"]
+
+    ROOT4 --> A_DN2 --> SP_CLEAN --> R4
+
+    style ROOT4 fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px
+    style A_DN2 fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+    style SP_CLEAN fill:#e3efe0,stroke:#4a8a4a,stroke-width:3px
+    style R4 fill:#f0ebe0,stroke:#b8a878
+      </div>
+      <p style="font-size:.83em;color:#5c7a5c;margin-top:6px">
+        All rollouts start from the same clean S'. Noise is isolated inside rollouts and averaged out. At low budget (200/500) variance reduction is insufficient → Afterstate actually loses.
+      </p>
+    </div>
+  </div>
+
+  <div style="margin-top:22px">
+    <h3>Phase 3: MCTS + N-Tuple Topology Shift</h3>
+    <div class="mermaid">
+graph LR
+    subgraph STATE_M["State MCTS + N-Tuple"]
+        ST["Score: 90,636<br/>macro_depth: 5.20<br/>probe_entropy: 0.330<br/>Shape: fat & shallow"]
+    end
+    subgraph AFTER_M["Afterstate MCTS + N-Tuple"]
+        AT["Score: 135,712<br/>macro_depth: 5.71<br/>probe_entropy: 0.318<br/>Shape: thin & deep"]
+    end
+
+    STATE_M -->|"Eval precision crosses threshold"| AFTER_M
+
+    style STATE_M fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px
+    style AFTER_M fill:#e3efe0,stroke:#4a8a4a,stroke-width:3px
+    </div>
+    <p class="muted" style="text-align:center;margin-top:8px">
+      Afterstate S' gives UCB lower-noise value estimates → PUCT is "deceived" into depth-first search. 90%+ compute focuses on the single survival branch.
+    </p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 3. TD Learning -->
+<!-- ============================================================ -->
+<div class="section">
+  <h2>3. TD Learning: Online Weight Update + Five-Group Progressive Ablation</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Q-Learning: Q(S, a) evaluates State</h3>
+      <div class="mermaid">
+graph LR
+    S_t["S_t<br/>with random tile"]
+    A_t["Select action a"]
+    R_t["Get reward R"]
+    S_next["S_t+1<br/>with random tile"]
+    UPDATE1["Update Q(S,a)<br/>max Q(S_next,a')<br/>picks max from noisy dist<br/>→ systematic overestimation"]
+
+    S_t --> A_t --> R_t --> S_next
+    S_next --> UPDATE1
+    UPDATE1 -.->|"bias accumulates"| S_t
+
+    style S_t fill:#e0e7ef,stroke:#7a8faa
+    style S_next fill:#f0e3e3,stroke:#b88080
+    style UPDATE1 fill:#f0e3e3,stroke:#b88080,stroke-width:2px
+      </div>
+      <p style="font-size:.83em;color:#9b5c5c;margin-top:6px">
+        <b>3-A:</b> Q(S,a) + State → Score 3,672. Max picks highest from noisy distribution → drives overestimation.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>V-Learning: V(S') evaluates Afterstate</h3>
+      <div class="mermaid">
+graph LR
+    S_t2["S_t"]
+    A_t2["Select a:<br/>max R+V(S')"]
+    SP_t["S'_t<br/>clean board"]
+    ENV_t["Env spawns tile"]
+    S_next2["S_t+1"]
+    UPDATE2["Update V(S')<br/>deterministic target<br/>smoother gradient"]
+
+    S_t2 --> A_t2 --> SP_t --> ENV_t --> S_next2
+    SP_t --> UPDATE2
+    UPDATE2 -.->|"bias still grows<br/>but slower"| S_t2
+
+    style S_t2 fill:#e0e7ef,stroke:#7a8faa
+    style SP_t fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+    style UPDATE2 fill:#f0ebe0,stroke:#b8a878,stroke-width:2px
+      </div>
+      <p style="font-size:.83em;color:#5c7a5c;margin-top:6px">
+        <b>3-D:</b> V(S') + Afterstate → Score 19,508, +431% vs 3-A. But overestimation: -0.194 at 25K → +1.976 at 100K.
+      </p>
+    </div>
+  </div>
+
+  <div style="margin-top:22px">
+    <h3>Five-Group Progressive Ablation: Update Target × Feature Input</h3>
+    <div class="mermaid">
+graph LR
+    A3["3-A: Q(S,a)+State<br/>Score: 3,672"]
+    B3["3-B: Q(S,a)+After<br/>Score: 10,566"]
+    C3["3-C: V(S')+State<br/>Score: 2,980<br/>Falsification group"]
+    D3["3-D: V(S')+After<br/>Score: 19,508"]
+    E3["3-E: MV(S')+After<br/>Score: 20,607"]
+
+    A3 -->|"+Afterstate repr"| B3
+    B3 -->|"+V(S') target"| D3
+    D3 -->|"+variance penalty"| E3
+    C3 -.->|"proves V(S) is meaningless"| A3
+
+    style A3 fill:#f0e3e3,stroke:#b88080
+    style B3 fill:#f0ebe0,stroke:#b8a878
+    style C3 fill:#f0e3e3,stroke:#b88080
+    style D3 fill:#e3efe0,stroke:#4a8a4a,stroke-width:3px
+    style E3 fill:#e3efe0,stroke:#4a8a4a
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 4. N-Tuple Network -->
+<!-- ============================================================ -->
+<div class="section">
+  <h2>4. N-Tuple Network: Learnable Board Representation Engine</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>8 Features: 4 Pattern + 4 Diff</h3>
+      <div class="mermaid">
+graph TB
+    BOARD["4x4 Board<br/>16 cells x 4bit = 64-bit state"]
+
+    subgraph FEATURES["8 N-Tuple Features"]
+        direction LR
+        P["4 Pattern features<br/>Direct 6-cell tile indices<br/>6 cells x 4bit = 24bit index<br/>Weight table: 2^24 = 16M<br/>Role: precision"]
+        D["4 Diff features<br/>Adjacent cell differences<br/>5 diffs x 5bit = 25bit index<br/>Weight table: 2^25 = 33.5M<br/>Role: generalization"]
+    end
+
+    SUM["V(S') = Sum of all 8 feature scores"]
+
+    BOARD --> FEATURES --> SUM
+
+    style BOARD fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px
+    style P fill:#e3efe0,stroke:#4a8a4a
+    style D fill:#e0e7ef,stroke:#7a8faa
+    style SUM fill:#f0ebe0,stroke:#b8a878,stroke-width:2px
+      </div>
+      <p style="font-size:.83em;margin-top:8px">
+        Pattern (absolute) is precise for seen states; Diff (relative) encodes shape-similar boards identically → generalizes to unseen positions. Complementary.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>8 Isomorphic Windows = Rotation/Flip Invariance</h3>
+      <div class="mermaid">
+graph TD
+    FEAT["One N-Tuple Feature<br/>fixed 6-cell pattern"]
+    W0["Window 0: Original"]
+    W1["Window 1: Rotate 90"]
+    W2["Window 2: Rotate 180"]
+    W3["Window 3: Rotate 270"]
+    W4["Window 4: Mirror"]
+    W5["Window 5: Mirror+90"]
+    W6["Window 6: Mirror+180"]
+    W7["Window 7: Mirror+270"]
+
+    LOOKUP["Each window: 6-cell encode → index → table lookup<br/>All 8 windows share the same weight table!"]
+    SUM2["Feature output = Sum of 8 window lookups<br/>Rotation invariance by construction"]
+
+    FEAT --> W0 & W1 & W2 & W3 & W4 & W5 & W6 & W7
+    W0 & W1 & W2 & W3 & W4 & W5 & W6 & W7 --> LOOKUP --> SUM2
+
+    style FEAT fill:#e0e7ef,stroke:#7a8faa
+    style W0 fill:#e3efe0,stroke:#4a8a4a
+    style W1 fill:#e3efe0,stroke:#4a8a4a
+    style W2 fill:#e3efe0,stroke:#4a8a4a
+    style W3 fill:#e3efe0,stroke:#4a8a4a
+    style W4 fill:#e0e7ef,stroke:#7a8faa
+    style W5 fill:#e0e7ef,stroke:#7a8faa
+    style W6 fill:#e0e7ef,stroke:#7a8faa
+    style W7 fill:#e0e7ef,stroke:#7a8faa
+    style SUM2 fill:#f0ebe0,stroke:#b8a878,stroke-width:2px
+      </div>
+      <p style="font-size:.83em;margin-top:8px">
+        Each TD update simultaneously corrects weights for all 8 equivalent views. Same board always gets the same value regardless of rotation.
+      </p>
+    </div>
+  </div>
+
+  <div style="margin-top:22px">
+    <h3>Two Frozen Weight Sets = Physical Basis of the Evaluation Dimension</h3>
+    <div class="mermaid">
+graph LR
+    subgraph TRAIN["Same architecture, different observation targets, 50K games each"]
+        direction TB
+        T1["State NT Training<br/>Input: S (with random tile)<br/>Output: V(S)<br/>→ Frozen State NT weights"]
+        T2["Afterstate NT Training<br/>Input: S' (without random tile)<br/>Output: V(S')<br/>→ Frozen After NT weights"]
+    end
+
+    subgraph USE["Used in Expectimax 2x2 Matrix"]
+        U1["1-D: State NT evals S_next → match<br/>1-F: State NT evals S' → usable (-7%)"]
+        U2["1-G: After NT evals S' → match<br/>1-E: After NT evals S_next → catastrophe (-92%)"]
+    end
+
+    T1 --> U1
+    T2 --> U2
+
+    style TRAIN fill:#f5f1ec,stroke:#d5cec4
+    style T1 fill:#e0e7ef,stroke:#7a8faa
+    style T2 fill:#e3efe0,stroke:#4a8a4a
+    style U1 fill:#e0e7ef,stroke:#7a8faa
+    style U2 fill:#f0e3e3,stroke:#b88080
+    </div>
+    <p class="muted" style="text-align:center;margin-top:10px">
+      The only difference between the two weight sets: the observation target during training. This is the physical foundation enabling the 2×2 ablation's "evaluation target" dimension.
+    </p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 5. Bitboard Engine -->
+<!-- ============================================================ -->
+<div class="section">
+  <h2>5. Bitboard Engine: 64-bit Integer + 65536-entry LUT = O(1) Slide</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Board Encoding: 16 cells → one 64-bit integer</h3>
+      <div class="mermaid">
+graph TD
+    ROW0["Row 0: 4 cells x 4bit = 16bit"]
+    ROW1["Row 1: 4 cells x 4bit = 16bit"]
+    ROW2["Row 2: 4 cells x 4bit = 16bit"]
+    ROW3["Row 3: 4 cells x 4bit = 16bit"]
+    ENCODED["64-bit integer<br/>board = row0 lshift 48 | row1 lshift 32 | row2 lshift 16 | row3<br/>Each cell stores exponent: 0=empty, 1=2, 2=4, ... 15=32768"]
+
+    ROW0 --> ENCODED
+    ROW1 --> ENCODED
+    ROW2 --> ENCODED
+    ROW3 --> ENCODED
+
+    style ROW0 fill:#e0e7ef,stroke:#7a8faa
+    style ROW1 fill:#e0e7ef,stroke:#7a8faa
+    style ROW2 fill:#e0e7ef,stroke:#7a8faa
+    style ROW3 fill:#e0e7ef,stroke:#7a8faa
+    style ENCODED fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+      </div>
+      <p style="font-size:.83em;margin-top:8px">
+        4 rows × 4 cols × 4bit = 64bit. One integer = full board state. Shift + mask extracts any row/cell.
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Slide Pipeline: Pure LUT O(1)</h3>
+      <div class="mermaid">
+graph LR
+    DIR["Direction unify<br/>UP/DOWN/RIGHT<br/>→ rotate to LEFT"]
+    EXTRACT["Extract row_i<br/>shift + mask"]
+    LUT["row_lut 65536<br/>single array access"]
+    MERGE["OR into output<br/>accumulate score"]
+    DONE["Slide complete<br/>4 lookups total"]
+
+    DIR --> EXTRACT --> LUT --> MERGE --> DONE
+
+    style DIR fill:#f5f1ec,stroke:#d5cec4
+    style LUT fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+    style MERGE fill:#e0e7ef,stroke:#7a8faa
+    style DONE fill:#e3efe0,stroke:#4a8a4a
+      </div>
+      <p style="font-size:.83em;color:#5c7a5c;margin-top:8px">
+        No per-cell loops. No conditional branches. All merge decisions precomputed at startup — runtime is pure integer ops + memory reads. Microsecond-level per move.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 6. Phase 2 -->
+<!-- ============================================================ -->
+<div class="section">
+  <h2>6. Phase 2: Environment Drift — Zero-Shot Robustness Stress Test</h2>
+
+  <div class="mermaid">
+graph LR
+    subgraph TRAIN_P2["Training: Standard Environment"]
+        T_P2["P(4) = 10%<br/>N-Tuple weights frozen<br/>Afterstate NT encodes<br/>P(4)=10% as weight prior"]
+    end
+
+    subgraph TEST_P2["Testing: Shifted Environment (zero-shot)"]
+        direction TB
+        P10["P(4)=10%<br/>Baseline"]
+        P30["P(4)=30%"]
+        P50["P(4)=50%"]
+        P70["P(4)=70%<br/>MCTS crossover!"]
+        P90["P(4)=90%<br/>QL collapse -73%"]
+    end
+
+    subgraph RESULTS["Key Findings"]
+        R1["Expectimax: After still leads<br/>but gap +49K → +8K"]
+        R2["MCTS: After overtaken at P(4)=0.7<br/>State more robust at low budget"]
+        R3["QL: Both collapse below 6K<br/>Weights overfit training dist"]
+    end
+
+    TRAIN_P2 --> TEST_P2 --> RESULTS
+
+    style TRAIN_P2 fill:#e3efe0,stroke:#4a8a4a
+    style TEST_P2 fill:#f0ebe0,stroke:#b8a878
+    style P10 fill:#e3efe0,stroke:#4a8a4a
+    style P70 fill:#f0e3e3,stroke:#b88080
+    style P90 fill:#f0e3e3,stroke:#b88080
+    style RESULTS fill:#e0e7ef,stroke:#7a8faa
+    style R2 fill:#f0e3e3,stroke:#b88080
+    style R3 fill:#f0e3e3,stroke:#b88080
+  </div>
+  <p class="muted" style="text-align:center;margin-top:10px">
+    Core conclusion: "Decoupling stochasticity" ≠ "Immunity to environmental change." Structural decoupling is a search-level operation; robustness is a semantic property of evaluator weights.
+  </p>
+</div>
+
+<!-- ============================================================ -->
+<!-- 7. Phase 3 -->
+<!-- ============================================================ -->
+<div class="section">
+  <h2>7. Phase 3: Architecture Improvements — Clear Win/Loss Divide</h2>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>TD Improvements (All Failed)</h3>
+      <div class="mermaid">
+graph TD
+    BASELINE["3-D: V+Sampling<br/>Score: 18,731<br/>(Baseline)"]
+
+    subgraph FAILED["Failed Improvements"]
+        F1["3-F: TDA-Full<br/>Exact expectation over all spawns<br/>Score: 17,767 below baseline<br/>Bias: +2.355 above baseline<br/>Time: 38,403s (2.9x)<br/>Why: incompatible with<br/>eligibility traces"]
+        F2["3-G: Downside-MV<br/>Only penalize downside risk<br/>Score: 17,937 below baseline<br/>Bias: +1.950<br/>Why: 2048 optimal policy<br/>is risk-seeking"]
+    end
+
+    BASELINE --> F1 & F2
+
+    style BASELINE fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+    style F1 fill:#f0e3e3,stroke:#b88080
+    style F2 fill:#f0e3e3,stroke:#b88080
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Search Improvements (All Succeeded)</h3>
+      <div class="mermaid">
+graph TD
+    subgraph SUCCEEDED["Successful Improvements"]
+        S1["HashDAG<br/>Hash-based equivalent subtree reuse<br/>Lossless: exact same result<br/>Depth=3: nodes -70%, time -53%"]
+        S2["BeamSearch Top-2<br/>Keep top-2 branches per layer<br/>NT+depth=2: +6.5% (denoising!)<br/>NT+depth=3: -10%<br/>Heuristic: -28% to -34%"]
+        S3["MCTS + N-Tuple<br/>Replace rollout with N-Tuple eval<br/>Score: 135,712<br/>(beats Expectimax 115K!)<br/>Topology: thin deep sword"]
+    end
+
+    style SUCCEEDED fill:#f5f1ec,stroke:#d5cec4
+    style S1 fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+    style S2 fill:#e3efe0,stroke:#4a8a4a
+    style S3 fill:#2d5a2d,stroke:#1a3a1a,stroke-width:3px,color:#fff
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <b>Meta-pattern:</b> "Swap in a better component" (HashDAG, MCTS+N-Tuple) succeeds; "Modify internals of existing component" (TDA-Full, Downside-MV) fails. Evaluator precision changes the optimal algorithm choice: low precision → Expectimax wins; high precision → MCTS wins.
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'neutral',
+    themeCSS: `
+      .node rect, .node circle, .node ellipse, .node polygon, .node path {
+        rx: 6px !important; ry: 6px !important;
+        stroke-width: 1.5px !important;
+      }
+      .node text, .edgeLabel text, .label text {
+        font-family: 'Georgia', serif !important;
+        font-size: 12px !important;
+      }
+      .edgeLabel text { font-size: 11px !important; }
+      .cluster rect {
+        rx: 6px !important; ry: 6px !important;
+        stroke: #d5cec4 !important;
+        stroke-width: 1px !important;
+      }
+      .edgePath .path { stroke: #b8a898 !important; stroke-width: 1.2px !important; }
+      .edgePath marker path { fill: #b8a898 !important; stroke: #b8a898 !important; }
+    `,
+    themeVariables: {
+      primaryColor: '#f5f1ec',
+      primaryTextColor: '#3b3733',
+      primaryBorderColor: '#d5cec4',
+      lineColor: '#c5beb4',
+      secondaryColor: '#faf8f5',
+      tertiaryColor: '#f5f1ec',
+      fontSize: '14px'
+    },
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }
+  });
+</script>
+</body>
+</html>

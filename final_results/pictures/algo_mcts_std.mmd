@@ -1,0 +1,25 @@
+graph TD
+    ROOT3["根节点 S<br/>总预算200-2000次<br/>PUCT分配给4个动作"]
+    A_UP["UP: N=500, Q=450"]
+    A_RT["RIGHT: N=400, Q=320"]
+    A_DN["DOWN: N=600, Q=600"]
+    A_LF["LEFT: N=500, Q=480"]
+
+    S1["S_next (在A处生成2)"]
+    S2["S_next (在B处生成4)"]
+    S3["S_next (在C处生成2)"]
+
+    R1["Rollout: 从带噪声的 S_next<br/>开始随机模拟<br/>起步点各不相同<br/>方差: 高"]
+    R2["Rollout: 从另一个 S_next<br/>起步，噪声不同"]
+
+    ROOT3 --> A_UP & A_RT & A_DN & A_LF
+    A_DN --> S1 & S2 & S3
+    S1 --> R1; S2 --> R2
+
+    PUCT["PUCT 选择:<br/>max( Q + c × √(ln N_parent / N_child) )"]
+
+    style ROOT3 fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px
+    style A_DN fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+    style S1 fill:#f0e3e3,stroke:#b88080
+    style S2 fill:#f0e3e3,stroke:#b88080
+    style PUCT fill:#f5f1ec,stroke:#d5cec4

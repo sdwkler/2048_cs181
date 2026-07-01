@@ -1,0 +1,11 @@
+graph TD
+    subgraph SUCCEEDED["成功的改进"]
+        S1["<b>HashDAG</b><br/>哈希判断等价子树<br/>利用 Afterstate 确定性<br/>得分: 与全展开完全一致<br/>（无损）<br/>Depth=3: 节点−70%, 耗时−53%"]
+        S2["<b>BeamSearch Top-2</b><br/>每层保留估值最高2个分支<br/>NT+depth=2: +6.5%（去噪！）<br/>NT+depth=3: −10%<br/>Heuristic: −28%~−34%"]
+        S3["<b>MCTS + N-Tuple</b><br/>Rollout 评估替换为 N-Tuple<br/>得分: 135,712<br/>（超越 Expectimax 115K!)<br/>拓扑: 瘦长利剑形态"]
+    end
+
+    style SUCCEEDED fill:#f5f1ec,stroke:#d5cec4
+    style S1 fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+    style S2 fill:#e3efe0,stroke:#4a8a4a
+    style S3 fill:#2d5a2d,stroke:#1a3a1a,stroke-width:3px,color:#fff

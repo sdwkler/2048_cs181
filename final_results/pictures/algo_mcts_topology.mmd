@@ -1,0 +1,12 @@
+graph LR
+    subgraph STATE_M["State MCTS + N-Tuple"]
+        ST["得分: 90,636<br/>macro_depth: 5.20<br/>probe_entropy: 0.330<br/>形态: 矮胖<br/>算力分散在多个分支"]
+    end
+    subgraph AFTER_M["Afterstate MCTS + N-Tuple"]
+        AT["得分: 135,712<br/>macro_depth: 5.71<br/>probe_entropy: 0.318<br/>形态: 瘦深<br/>90%+ 算力聚焦最佳分支"]
+    end
+
+    STATE_M -->|"评估精度跨越阈值<br/>Afterstate UCB被"欺骗"<br/>从广度优先 → 深度优先"| AFTER_M
+
+    style STATE_M fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px
+    style AFTER_M fill:#e3efe0,stroke:#4a8a4a,stroke-width:3px

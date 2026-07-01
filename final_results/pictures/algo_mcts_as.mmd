@@ -1,0 +1,16 @@
+graph TD
+    ROOT4["根节点 S<br/>相同的 Rollout 预算"]
+    A_DN2["DOWN: N=800<br/>PUCT 快速收敛!<br/>低噪声估值信号"]
+
+    SP_CLEAN["Afterstate S'（纯净）<br/>所有 Rollout 从<br/>同一个干净盘面起步"]
+
+    R4["Rollout × 200<br/>全部从同一个 S' 起步<br/>方差: 低<br/>噪声被推入 Rollout 内部<br/>通过大量采样消解"]
+
+    ROOT4 --> A_DN2 --> SP_CLEAN --> R4
+
+    PUCT2["PUCT 收敛更快<br/>因为价值估计<br/>方差更低"]
+
+    style ROOT4 fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px
+    style A_DN2 fill:#e3efe0,stroke:#4a8a4a,stroke-width:3px
+    style SP_CLEAN fill:#e3efe0,stroke:#4a8a4a,stroke-width:3px
+    style PUCT2 fill:#f5f1ec,stroke:#d5cec4

@@ -1,0 +1,26 @@
+graph TD
+    ROOT2["根节点 State S"]
+    A2a["动作: UP"]
+    A2b["动作: RIGHT"]
+    A2c["动作: DOWN"]
+    A2d["动作: LEFT"]
+
+    SP1["S' (UP后)"]
+    SP2["S' (RIGHT后)"]
+    SP3["S' (DOWN后)"]
+    SP4["S' (LEFT后)"]
+
+    SHARED["不同动作可能到达<br/>同一个 S' → DAG 节点<br/>只计算一次"]
+
+    ROOT2 --> A2a & A2b & A2c & A2d
+    A2a --> SP1
+    A2b --> SP2
+    A2c -->|"与 LEFT 合并结果相同"| SHARED
+    A2d -->|"与 DOWN 合并结果相同"| SHARED
+
+    style ROOT2 fill:#e0e7ef,stroke:#7a8faa,stroke-width:2px
+    style SP1 fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+    style SP2 fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+    style SP3 fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+    style SP4 fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+    style SHARED fill:#2d5a2d,stroke:#1a3a1a,stroke-width:3px,color:#fff

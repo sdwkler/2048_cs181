@@ -1,0 +1,21 @@
+graph TB
+    subgraph ABL["TD 学习消融实验组"]
+        direction LR
+        A3["3-A: Q(S,a) + State<br/>得分: 3,672<br/>传统 Q-Learning 基线<br/>max 从含噪 Q 挑最大"]
+        B3["3-B: Q(S,a) + Afterstate<br/>得分: 10,566<br/>仅切换表征输入<br/>目标函数不变"]
+        C3["3-C: V(S') + State<br/>得分: 2,980<br/>逻辑证伪组<br/>V(S) 与动作无关<br/>退化为只比即时奖励"]
+        D3["3-D: V(S') + Afterstate<br/>得分: 19,508<br/>★ 完全解耦<br/>输入 + 目标全部纯净"]
+        E3["3-E: MV(S') + Afterstate<br/>得分: 20,607<br/>增加方差惩罚项<br/>100K 时优势消失"]
+    end
+
+    A3 -->|"+Afterstate 表征"| B3
+    B3 -->|"+V(s') 目标函数"| D3
+    C3 -->|"证明 V(S) 无意义"| B3
+    D3 -->|"+方差惩罚"| E3
+
+    style A3 fill:#f0e3e3,stroke:#b88080
+    style B3 fill:#f0ebe0,stroke:#b8a878
+    style C3 fill:#f0e3e3,stroke:#b88080
+    style D3 fill:#e3efe0,stroke:#4a8a4a,stroke-width:3px
+    style E3 fill:#e3efe0,stroke:#4a8a4a
+    style ABL fill:#f5f1ec,stroke:#d5cec4

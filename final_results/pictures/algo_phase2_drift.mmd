@@ -1,0 +1,30 @@
+graph LR
+    subgraph TRAIN_P2["训练阶段: 标准环境"]
+        T_P2["P(4) = 10%<br/>N-Tuple 权重冻结<br/>Afterstate NT 将<br/>P(4)=10% 编码为权重先验"]
+    end
+
+    subgraph TEST_P2["测试阶段: 偏移环境（零样本迁移）"]
+        direction TB
+        P10["P(4)=10%<br/>基线"]
+        P30["P(4)=30%"]
+        P50["P(4)=50%"]
+        P70["P(4)=70%<br/>MCTS 交叉点！"]
+        P90["P(4)=90%<br/>QL 崩溃 −73%"]
+    end
+
+    subgraph RESULTS["核心发现"]
+        R1["Expectimax: After 仍领先<br/>但绝对优势 +49K → +8K"]
+        R2["MCTS: After 在 P(4)=0.7 被反超<br/>State 低预算时更鲁棒"]
+        R3["QL: 双方案崩溃至 6K 以下<br/>权重过拟合训练分布"]
+    end
+
+    TRAIN_P2 --> TEST_P2 --> RESULTS
+
+    style TRAIN_P2 fill:#e3efe0,stroke:#4a8a4a
+    style TEST_P2 fill:#f0ebe0,stroke:#b8a878
+    style P10 fill:#e3efe0,stroke:#4a8a4a
+    style P70 fill:#f0e3e3,stroke:#b88080
+    style P90 fill:#f0e3e3,stroke:#b88080
+    style RESULTS fill:#e0e7ef,stroke:#7a8faa
+    style R2 fill:#f0e3e3,stroke:#b88080
+    style R3 fill:#f0e3e3,stroke:#b88080

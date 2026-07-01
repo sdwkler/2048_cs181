@@ -1,0 +1,13 @@
+graph TD
+    BASELINE["3-D: V+采样<br/>得分: 18,731<br/>（基线）"]
+
+    subgraph FAILED["失败的改进"]
+        F1["3-F: TDA-Full<br/>精确枚举所有落子计算期望<br/>得分: 17,767 < 基线<br/>过估计: +2.355 > 基线<br/>训练时间: 38,403s (2.9×)<br/><br/>原因: 精确期望与<br/>TD(λ) 资格迹不兼容<br/>采样轨迹 ≠ 全宽期望"]
+        F2["3-G: Downside-MV<br/>仅惩罚下行风险<br/>得分: 17,937 < 基线<br/>过估计: +1.950<br/><br/>原因: 2048 最优策略<br/>是风险寻求型<br/>高分 = 高风险 = 高方差机会"]
+    end
+
+    BASELINE --> F1 & F2
+
+    style BASELINE fill:#e3efe0,stroke:#4a8a4a,stroke-width:2px
+    style F1 fill:#f0e3e3,stroke:#b88080
+    style F2 fill:#f0e3e3,stroke:#b88080

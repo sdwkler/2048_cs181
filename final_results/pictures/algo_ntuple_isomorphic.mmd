@@ -1,0 +1,28 @@
+graph TD
+    FEAT["一条 N-Tuple Feature<br/>（固定6格图案）"]
+    W0["窗口0: 原图"]
+    W1["窗口1: 旋转90°"]
+    W2["窗口2: 旋转180°"]
+    W3["窗口3: 旋转270°"]
+    W4["窗口4: 镜像"]
+    W5["窗口5: 镜像+转90°"]
+    W6["窗口6: 镜像+转180°"]
+    W7["窗口7: 镜像+转270°"]
+
+    LOOKUP["每个窗口：6格编码 → 索引 → 查表取值<br/>全部 8 个窗口共享<br/>同一张权重表!"]
+
+    SUM2["Feature 输出 = Σ 各窗口查表值<br/>旋转不变性由构造保证"]
+
+    FEAT --> W0 & W1 & W2 & W3 & W4 & W5 & W6 & W7
+    W0 & W1 & W2 & W3 & W4 & W5 & W6 & W7 --> LOOKUP --> SUM2
+
+    style FEAT fill:#e0e7ef,stroke:#7a8faa
+    style W0 fill:#e3efe0,stroke:#4a8a4a
+    style W1 fill:#e3efe0,stroke:#4a8a4a
+    style W2 fill:#e3efe0,stroke:#4a8a4a
+    style W3 fill:#e3efe0,stroke:#4a8a4a
+    style W4 fill:#e0e7ef,stroke:#7a8faa
+    style W5 fill:#e0e7ef,stroke:#7a8faa
+    style W6 fill:#e0e7ef,stroke:#7a8faa
+    style W7 fill:#e0e7ef,stroke:#7a8faa
+    style SUM2 fill:#f0ebe0,stroke:#b8a878,stroke-width:2px
