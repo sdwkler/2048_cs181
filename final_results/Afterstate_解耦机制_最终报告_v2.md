@@ -127,7 +127,6 @@ Expectimax 算法对给定深度内的所有可能状态进行精确枚举。利
 | 1-E | State 树 | Afterstate N-Tuple（错配） | 权重兼容性测试：ANT 用于 $S_{\text{next}}$ |
 | 1-F | Afterstate 树 | State N-Tuple（错配） | 权重兼容性测试：SNT 用于 $S'$ |
 | 1-G | Afterstate 树 | Afterstate N-Tuple | 完全解耦（匹配方案） |
-| 1-H | Afterstate 树 | Afterstate N-Tuple + 剪枝 | 工程优化极限 |
 
 搜索深度固定为 2 层。1-E 和 1-F 为**错配实验**——将在特定观测分布上训练的 N-Tuple 权重应用于不匹配的输入类型，以测试两类权重的跨分布泛化能力。这并非独立切换"树结构"和"评估对象"两个维度，而是在验证 N-Tuple 权重对输入分布偏移的鲁棒性。
 
@@ -232,7 +231,6 @@ Phase 1 在标准 2048 环境（$P(4) = 10\%$）下，分别通过 Expectimax、
 | 1-E Std+AfterNT | Standard | State/Afterstate NT | **5,066** | 0% | 0% | 34.47 | 0.994 |
 | 1-F After+StateNT | Afterstate | Afterstate/State NT | 60,126 | 93% | 67% | 2.56 | 0.553 |
 | 1-G After+AfterNT | Afterstate | Afterstate/Afterstate NT | **114,885** | 97% | 91% | 2.59 | 0.553 |
-| 1-H After+AfterNT+剪枝 | Afterstate | Afterstate NT+BeamSearch | **125,721** | 100% | 96% | 2.31 | 0.597 |
 
 #### 整体方案对比
 
@@ -240,11 +238,9 @@ Phase 1 在标准 2048 环境（$P(4) = 10\%$）下，分别通过 Expectimax、
 
 #### 耗时差异的来源
 
-1-D 与 1-G 的耗时差异（26.81ms → 2.59ms，加速 10.3 倍）源于两个叠加因素：
+1-D 与 1-G 的耗时差异（26.81ms → 2.59ms，加速 10.3 倍）源于因素：
 
 第一，**随机层展开的省略**。State 树的搜索在每次状态转移时，需对所有可能的随机落子（全部空位 × {tile=2, tile=4}）进行加权平均以计算期望值——这相当于在每层深度上额外展开一整层随机子节点。Afterstate 树的叶节点为 $S'$，评估器直接给出估值，无需枚举后续随机事件。
-
-第二，**DAG 拓扑压缩**。Afterstate 树的压缩率在深度 2 时约为 0.50~0.55，深度 3 时进一步降至 0.21~0.25；而 State 树在深度 3 时压缩率约为 0.40~0.46。两种机制共同造成了量级差异。
 
 需要注意的是，拓扑压缩本身并非得分增益的来源。对比 1-F（Afterstate 树 + State NT，得分 60,126）和 1-D（Standard 树 + State NT，得分 64,740），仅改变树结构甚至造成轻微下降——说明压缩加速了搜索但不改善决策质量。
 
