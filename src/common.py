@@ -92,7 +92,7 @@ def default_config(mode: str, seed: int, workers: int | None, output_dir: str) -
         # q_bias_samples=100,
         # q_td_window=1000,
         max_game_steps=None,
-        q_episodes=100_000,
+        q_episodes=25_000,
         q_eval_games=100,
         q_bias_episode=90_000,
         q_bias_samples=100,

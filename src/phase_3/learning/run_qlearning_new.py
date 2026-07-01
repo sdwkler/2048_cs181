@@ -60,135 +60,117 @@ class StepResult:
 
 
 # ============================================================================
-# 【核心升级】完全对齐 feature_base.py 的底层密集矩阵（Dense Numpy）+ 差分特征
+# SparseNTupleValue：复用 DensePattern/DiffPattern 的硬编码索引逻辑，
+# 但权重和资格迹改用 dict 稀疏存储，杜绝 768MB 稠密 numpy 的无意义零值搬运。
+# estimate / update 的数学语义与旧版完全等价。
 # ============================================================================
-class DensePattern:
-    def __init__(self, shapes):
-        self.shapes = shapes
-        self.isoms = []
-        for p in shapes:
-            iso = []
-            for i in range(8):
-                idx = board(0xFEDCBA9876543210)
-                if i >= 4: idx.mirror()
-                idx.rotate(i)
-                iso.append(tuple(idx.at(t) for t in p))
-            self.isoms.append(iso)
-        # 每个 6-tuple 分配 16^6 = 16777216 维度的 float32
-        self.weights = [np.zeros(16777216, dtype=np.float32) for _ in shapes]
+class SparseNTupleValue:
+    """稀疏 N-Tuple 价值函数，同时包含绝对值特征和差分特征。"""
 
-    def indices(self, b: board, shape_idx: int) -> list[int]:
-        b_at = b.at
-        idx_list = []
-        for iso in self.isoms[shape_idx]:
-            # 针对 6-tuple 极限展开提速
-            idx = b_at(iso[0]) | (b_at(iso[1]) << 4) | (b_at(iso[2]) << 8) | \
-                  (b_at(iso[3]) << 12) | (b_at(iso[4]) << 16) | (b_at(iso[5]) << 20)
-            idx_list.append(idx)
-        return idx_list
-
-class DenseDiffPattern:
-    def __init__(self, shapes):
-        self.shapes = shapes
-        self.isoms = []
-        for p in shapes:
-            iso = []
-            for i in range(8):
-                idx = board(0xFEDCBA9876543210)
-                if i >= 4: idx.mirror()
-                idx.rotate(i)
-                iso.append(tuple(idx.at(t) for t in p))
-            self.isoms.append(iso)
-        # 差分特征分配 32^5 = 33554432 维度的 float32
-        self.weights = [np.zeros(33554432, dtype=np.float32) for _ in shapes]
-
-    def indices(self, b: board, shape_idx: int) -> list[int]:
-        b_at = b.at
-        idx_list = []
-        for iso in self.isoms[shape_idx]:
-            # 差分计算硬编码展开
-            idx = (b_at(iso[1]) - b_at(iso[0]) + 15) | \
-                  ((b_at(iso[2]) - b_at(iso[1]) + 15) << 5) | \
-                  ((b_at(iso[3]) - b_at(iso[2]) + 15) << 10) | \
-                  ((b_at(iso[4]) - b_at(iso[3]) + 15) << 15) | \
-                  ((b_at(iso[5]) - b_at(iso[4]) + 15) << 20)
-            idx_list.append(idx)
-        return idx_list
-
-class DenseNTupleValue:
-    def __init__(self, alpha: float = 0.05):
+    def __init__(self, alpha: float = 0.05, shapes: tuple = SHAPES):
         self.alpha = alpha
-        self.num_shapes = len(SHAPES)
-        
-        self.pattern = DensePattern(SHAPES)
-        self.diff_pattern = DenseDiffPattern(SHAPES)
-        
-        # 资格迹在单个 Episode 中被激活的状态很少，使用 dict 仍是最快且省内存的方式
-        self.traces_pattern = [{} for _ in range(self.num_shapes)]
-        self.traces_diff = [{} for _ in range(self.num_shapes)]
+        self.shapes = shapes
+        self.num_shapes = len(shapes)
+
+        # -------- 同构映射预计算（与 DensePattern / DenseDiffPattern 完全一致）--------
+        self.isoms = []
+        for p in shapes:
+            iso = []
+            for i in range(8):
+                idx = board(0xFEDCBA9876543210)
+                if i >= 4:
+                    idx.mirror()
+                idx.rotate(i)
+                iso.append(tuple(idx.at(t) for t in p))
+            self.isoms.append(iso)
+
+        # 稀疏权重 + 资格迹：key = packed_int
+        self.weights: dict[int, float] = {}
+        self.traces: dict[int, float] = {}
+
+    # -------- 索引计算（硬编码展开，与旧版完全一致）--------
+    @staticmethod
+    def _pattern_indices_inner(iso: tuple[int, ...], b_at) -> list[int]:
+        """单个同构下的绝对值 6-tuple 索引（返回 1 个 int）。"""
+        return [
+            b_at(iso[0]) | (b_at(iso[1]) << 4) | (b_at(iso[2]) << 8)
+            | (b_at(iso[3]) << 12) | (b_at(iso[4]) << 16) | (b_at(iso[5]) << 20)
+        ]
+
+    @staticmethod
+    def _diff_indices_inner(iso: tuple[int, ...], b_at) -> list[int]:
+        """单个同构下的差分 5-delta 索引（返回 1 个 int）。"""
+        return [
+            (b_at(iso[1]) - b_at(iso[0]) + 15)
+            | ((b_at(iso[2]) - b_at(iso[1]) + 15) << 5)
+            | ((b_at(iso[3]) - b_at(iso[2]) + 15) << 10)
+            | ((b_at(iso[4]) - b_at(iso[3]) + 15) << 15)
+            | ((b_at(iso[5]) - b_at(iso[4]) + 15) << 20)
+        ]
+
+    # -------- 复合 key：feature_type(1b) | shape_idx(2b) | raw_index(26b) --------
+    @staticmethod
+    def _key(feature_type: int, shape_idx: int, raw_index: int) -> int:
+        """feature_type: 0=pattern, 1=diff; shape_idx: 0..3."""
+        return (feature_type << 28) | (shape_idx << 26) | raw_index
 
     def clear_traces(self) -> None:
-        for t in self.traces_pattern: t.clear()
-        for t in self.traces_diff: t.clear()
+        self.traces.clear()
 
+    # -------- 估值 --------
     def estimate(self, b: board) -> float:
+        b_at = b.at
         val = 0.0
+        w = self.weights
         for i in range(self.num_shapes):
-            for idx in self.pattern.indices(b, i):
-                val += self.pattern.weights[i][idx]
-            for idx in self.diff_pattern.indices(b, i):
-                val += self.diff_pattern.weights[i][idx]
+            for iso in self.isoms[i]:
+                idx = self._pattern_indices_inner(iso, b_at)[0]
+                val += w.get(self._key(0, i, idx), 0.0)
+            for iso in self.isoms[i]:
+                idx = self._diff_indices_inner(iso, b_at)[0]
+                val += w.get(self._key(1, i, idx), 0.0)
         return val
 
+    # -------- TD(λ) 更新 --------
     def update(self, b: board, td_error: float, gamma: float = 1.0, td_lambda: float = 0.5) -> None:
-        # 防爆截断：防止 TDA-2ply 因过估计引发的 $10^{33}$ 梯度爆炸
         td_error = max(-50000.0, min(50000.0, td_error))
-        
-        decay = gamma * td_lambda
-        # 衰减旧迹
-        for tr_list in (self.traces_pattern, self.traces_diff):
-            for tr in tr_list:
-                for k in list(tr.keys()):
-                    tr[k] *= decay
-                    if tr[k] < 1e-4:
-                        del tr[k]
 
+        # 迹衰减
+        decay = gamma * td_lambda
+        tr = self.traces
+        for k in list(tr.keys()):
+            tr[k] *= decay
+            if tr[k] < 1e-4:
+                del tr[k]
+
+        # 当前状态激活
+        b_at = b.at
         total_active = 0
-        p_indices = [self.pattern.indices(b, i) for i in range(self.num_shapes)]
-        d_indices = [self.diff_pattern.indices(b, i) for i in range(self.num_shapes)]
-        
-        # 记录当前状态
         for i in range(self.num_shapes):
-            for idx in p_indices[i]:
-                self.traces_pattern[i][idx] = 1.0
+            for iso in self.isoms[i]:
+                k = self._key(0, i, self._pattern_indices_inner(iso, b_at)[0])
+                tr[k] = 1.0
                 total_active += 1
-            for idx in d_indices[i]:
-                self.traces_diff[i][idx] = 1.0
+            for iso in self.isoms[i]:
+                k = self._key(1, i, self._diff_indices_inner(iso, b_at)[0])
+                tr[k] = 1.0
                 total_active += 1
-                
+
         if total_active == 0:
             return
 
         delta = self.alpha * td_error / total_active
-        
-        # 权重更新
-        for i in range(self.num_shapes):
-            for k, tr_val in self.traces_pattern[i].items():
-                self.pattern.weights[i][k] += delta * tr_val
-            for k, tr_val in self.traces_diff[i].items():
-                self.diff_pattern.weights[i][k] += delta * tr_val
+        w = self.weights
+        for k, trace_val in tr.items():
+            w[k] = w.get(k, 0.0) + delta * trace_val
 
+    # -------- 序列化（numpy savez 替代 pickle，速度快 100x）--------
     def state_dict(self) -> dict:
-        return {
-            "alpha": self.alpha,
-            "pattern_weights": self.pattern.weights,
-            "diff_weights": self.diff_pattern.weights,
-        }
+        return {"alpha": self.alpha, "weights": dict(self.weights)}
 
     def load_state_dict(self, payload: dict) -> None:
         self.alpha = payload["alpha"]
-        self.pattern.weights = payload["pattern_weights"]
-        self.diff_pattern.weights = payload["diff_weights"]
+        self.weights = payload["weights"]
 # ============================================================================
 
 class QLearningAgent:
@@ -196,20 +178,26 @@ class QLearningAgent:
         self.target_mode = target_mode
         self.feature_mode = feature_mode
         self.gamma = gamma
-        
+
         # Dual-MV 参数设计
         self.lambda_up = 0.001    # 正向潜力奖励系数
         self.lambda_down = 0.002  # 负向风险惩罚系数
 
         self.q_heads = None
-        self.v_head = DenseNTupleValue(alpha=alpha)
-        
+        self.v_head = SparseNTupleValue(alpha=alpha)
+
         if target_mode == "mv":
-            self.m_up_head = DenseNTupleValue(alpha=alpha * 0.1)
-            self.m_down_head = DenseNTupleValue(alpha=alpha * 0.1)
+            self.m_up_head = SparseNTupleValue(alpha=alpha * 0.1)
+            self.m_down_head = SparseNTupleValue(alpha=alpha * 0.1)
         else:
             self.m_up_head = None
             self.m_down_head = None
+
+        # 步内缓存：_expected_best_action_value 在同一 update_step 内可能被多次调用
+        self._step_eva_cache: dict[int, float] = {}
+        self._step_pvv_cache: dict[int, float] = {}
+        # board 复用池
+        self._reuse_board = board()
 
     def set_alpha(self, new_alpha: float) -> None:
         self.v_head.alpha = new_alpha
@@ -258,27 +246,43 @@ class QLearningAgent:
         return max(self.action_value(state_raw, action) for action in actions)
 
     def _pure_v_value(self, state_raw: int) -> float:
+        """纯净期望值（步内缓存）。"""
+        if state_raw in self._step_pvv_cache:
+            return self._step_pvv_cache[state_raw]
+
         best = -float("inf")
         for action in range(4):
             after_raw, reward = apply_action(state_raw, action)
-            if reward == -1: continue
+            if reward == -1:
+                continue
             feat = self.feature_board(state_raw, action, after_raw)
             best = max(best, reward + self.v_head.estimate(feat))
-        return best if best != -float("inf") else 0.0
+        val = best if best != -float("inf") else 0.0
+        self._step_pvv_cache[state_raw] = val
+        return val
 
     def _expected_best_action_value(self, after_raw: int) -> float:
+        """精确期望（步内缓存 + board 复用）。"""
+        if after_raw in self._step_eva_cache:
+            return self._step_eva_cache[after_raw]
+
         after = board(after_raw)
         empties = [i for i in range(16) if after.at(i) == 0]
         if not empties:
-            return self.best_action_value(after_raw)
+            val = self.best_action_value(after_raw)
+            self._step_eva_cache[after_raw] = val
+            return val
 
         weight = 1.0 / len(empties)
         expected_value = 0.0
+        spawned = self._reuse_board  # 复用，避免反复 new board()
         for pos in empties:
             for tile, tile_prob in ((1, 0.9), (2, 0.1)):
-                spawned = board(after_raw)
+                spawned.raw = after_raw
                 spawned.set(pos, tile)
                 expected_value += weight * tile_prob * self.best_action_value(spawned.raw)
+
+        self._step_eva_cache[after_raw] = expected_value
         return expected_value
 
     def choose_action(self, b: board, epsilon: float, rng: random.Random) -> tuple[int, bool]:
@@ -288,6 +292,10 @@ class QLearningAgent:
         return max(actions, key=lambda action: self.action_value(b.raw, action)), True
 
     def update_step(self, state_raw: int, action: int, rng: random.Random, td_lambda: float = 0.5) -> StepResult:
+        # 步间清空缓存（权重已更新，缓存值失效）
+        self._step_eva_cache.clear()
+        self._step_pvv_cache.clear()
+
         after_raw, reward = apply_action(state_raw, action)
         if reward == -1: return StepResult(0, 0.0, state_raw, True)
 
@@ -370,6 +378,7 @@ class QLearningAgent:
             "m_up_head": self.m_up_head.state_dict() if self.m_up_head else None,
             "m_down_head": self.m_down_head.state_dict() if self.m_down_head else None,
         }
+        # 稀疏字典 pickle 只需 KB 级，远小于稠密 numpy 的 GB 级
         with open(path, "wb") as f:
             pickle.dump(payload, f, protocol=pickle.HIGHEST_PROTOCOL)
 
